@@ -11,6 +11,7 @@ import { AppProvider, useAppContext } from './src/context/AppContext';
 import { PaperLightTheme, PaperDarkTheme } from './src/theme/PaperTheme';
 // 3. Pantallas
 import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreeen';
 // 4. Navegación del Dashboard (tabs)
 import DashboardTabs from './src/navigation/DashboardTabs';
 
@@ -29,6 +30,7 @@ function MainLayout() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {/* Pantalla 1: Login */}
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
           {/* Pantalla 2: Dashboard (Contiene los Tabs) */}
           <Stack.Screen name="Dashboard" component={DashboardTabs} />
         </Stack.Navigator>

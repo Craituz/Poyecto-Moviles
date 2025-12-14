@@ -59,6 +59,14 @@ export default function LoginScreen({ navigation }) {
           >
             Entrar
           </Button>
+          <Button
+            mode="text"
+            onPress={() => navigation.navigate("Register")}
+            style={{ marginTop: 16 }}
+            labelStyle={{ color: colors.secondary }}
+          >
+            ¿No tienes cuenta? Regístrate
+          </Button>
         </Card.Content>
       </Card>
       <Snackbar

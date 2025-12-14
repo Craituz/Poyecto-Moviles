@@ -2,7 +2,7 @@ import { useState } from "react"
 import { View, StyleSheet, Text } from "react-native"
 import { Button, Card, Snackbar, TextInput, useTheme } from "react-native-paper"
 
-export default function RegisterScreen() {
+export default function RegisterScreen({ navigation }) {
     
     const [name, setName] = useState('')
     const [email, setEmail] = useState('');
@@ -13,6 +13,23 @@ export default function RegisterScreen() {
 
     const theme = useTheme();
     const { colors } = theme;
+
+    const handleRegister = () => {
+        if (!name || !email || !password || !cpassword) {
+            setError("Todos los campos son obligatorios.");
+            return;
+        }
+        if (password !== cpassword) {
+            setError("Las contraseñas no coinciden.");
+            return;
+        }
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            // Simula registro exitoso
+            navigation.replace("Dashboard");
+        }, 800);
+    };
 
     return(
         <View style = {[styles.container, { backgroundColor: colors.background }]}>
@@ -61,10 +78,18 @@ export default function RegisterScreen() {
                     <Button
                     mode = "contained"
                     loading = {loading}
-                    //Crear onPress
+                    onPress={handleRegister}
                     style = {styles.button}
                     >
                     Registrar
+                    </Button>
+                    <Button
+                    mode = "text"
+                    onPress={() => navigation.goBack()}
+                    style = {{ marginTop: 16 }}
+                    labelStyle={{ color: colors.secondary }}
+                    >
+                    Ya tengo cuenta
                     </Button>
 
                 </Card.Content>
