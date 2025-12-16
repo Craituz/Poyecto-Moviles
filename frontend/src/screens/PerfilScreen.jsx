@@ -3,21 +3,40 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { Text, Avatar, Button, useTheme, Card } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAppContext } from "../context/AppContext";
+// 1. IMPORTAR ACCIONES DE NAVEGACIÓN
+import { useNavigation, CommonActions } from "@react-navigation/native";
 
-export default function PerfilScreen({ navigation }) {
-  const { user, setUser } = useAppContext();
+export default function PerfilScreen() {
+  // 2. USAMOS 'logout' DEL CONTEXTO EN LUGAR DE 'setUser' MANUAL
+  const { user, logout } = useAppContext();
   const theme = useTheme();
   const { colors } = theme;
+  
+  // 3. HOOK DE NAVEGACIÓN
+  const navigation = useNavigation();
 
+  // 4. FUNCIÓN DE CIERRE DE SESIÓN SEGURO
   const handleLogout = () => {
-    setUser({ isLoggedIn: false, nombre: "", rol: "" });
-    navigation.replace("Login");
+    // A. Limpia el usuario del contexto global
+    logout(); 
+    
+    // B. Resetea la pila de navegación para ir al Login y borrar historial
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      })
+    );
   };
+
+  // Protección simple por si el usuario es null momentáneamente
+  if (!user) return null;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.screenTitle, { color: colors.text }]}>Mi Perfil</Text>
 
+      {/* TARJETA DE INFORMACIÓN DE USUARIO */}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         <View style={styles.profileHeader}>
             <Avatar.Icon 
@@ -32,13 +51,20 @@ export default function PerfilScreen({ navigation }) {
         </View>
         
         <Text style={[styles.userName, { color: colors.text }]}>
-            {user.nombre || "Cristhian Pérez"}
+            {user.nombre || "Usuario"}
         </Text>
+        
+        {/* Mostramos el Rol como una pequeña etiqueta */}
+        <View style={{ alignItems: 'center', marginBottom: 15, marginTop: -15 }}>
+            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                {user.rol === 'admin' ? 'Administrador' : 'Cliente'}
+            </Text>
+        </View>
 
         <View style={styles.infoSection}>
             <Text style={styles.label}>Email</Text>
             <Text style={[styles.value, { color: colors.text }]}>
-                {user.correo || "cristhianperez663@gmail.com"}
+                {user.correo || "correo@ejemplo.com"}
             </Text>
             
             <Text style={styles.label}>Teléfono</Text>
@@ -59,7 +85,7 @@ export default function PerfilScreen({ navigation }) {
 
         <Button 
             mode="contained" 
-            onPress={handleLogout} 
+            onPress={handleLogout} // <--- USAMOS LA NUEVA FUNCIÓN AQUÍ
             style={[styles.logoutButton, { backgroundColor: colors.primary }]}
             icon="logout"
             contentStyle={{ flexDirection: 'row-reverse' }}
@@ -68,6 +94,7 @@ export default function PerfilScreen({ navigation }) {
         </Button>
       </View>
 
+      {/* SECCIÓN DE HISTORIAL */}
       <View style={[styles.card, { marginTop: 16, marginBottom: 30, backgroundColor: colors.surface }]}>
         <View style={styles.historyHeader}>
              <MaterialCommunityIcons name="history" size={24} color={colors.text} />
