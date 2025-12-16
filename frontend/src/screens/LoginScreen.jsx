@@ -16,17 +16,28 @@ export default function LoginScreen({ navigation }) {
   const [checked, setChecked] = useState(false);
 
   const handleLogin = () => {
+    // 1. Validación básica de campos vacíos
     if (!email || !password) {
       setError("Todos los campos son obligatorios.");
       return;
     }
+
     setLoading(true);
+
+    // Simulamos un pequeño retraso de red
     setTimeout(() => {
       setLoading(false);
-      // Simula login: guarda usuario demo en contexto
-      login();
-      // Navega al Dashboard (reemplaza la pantalla de Login)
-      navigation.replace("Dashboard");
+
+      // 2. CAMBIO PRINCIPAL: Enviamos email y password al contexto
+      const success = login(email, password);
+
+      if (success) {
+        // Si las credenciales son válidas (Admin o Cliente), entramos
+        navigation.replace("Dashboard");
+      } else {
+        // Si falló (aunque con la lógica actual solo falla si están vacíos, es buena práctica)
+        setError("Credenciales incorrectas.");
+      }
     }, 800);
   };
 
@@ -44,16 +55,17 @@ export default function LoginScreen({ navigation }) {
           <Text style={[styles.title, { color: colors.primary }]}>Yeli's Cake</Text>
           <Text style={[styles.subtitle, { color: '#666' }]}>Ingresa a tu cuenta para continuar</Text>
           
-          <Text style={styles.label}>Correo Electrónico</Text>
+          <Text style={styles.label}>Usuario / Correo</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
             style={[styles.input, { backgroundColor: colors.surface }]}
             autoCapitalize="none"
-            keyboardType="email-address"
+            // Quitamos keyboardType email estricto para facilitar escribir "admin"
+            // keyboardType="email-address" 
             underlineColor="transparent"
             activeUnderlineColor={colors.primary}
-            placeholder="ej. nombre@correo.com"
+            placeholder="ej. admin o cliente"
           />
           <View style={styles.underline} />
 
@@ -108,7 +120,7 @@ export default function LoginScreen({ navigation }) {
             CREAR CUENTA NUEVA
           </Button>
 
-           <TouchableOpacity onPress={() => {}} style={styles.catalogContainer}>
+            <TouchableOpacity onPress={() => {}} style={styles.catalogContainer}>
                 <MaterialCommunityIcons name="magnify" size={20} color={colors.secondary} />
                 <Text style={[styles.catalogText, { color: colors.primary }]}>Ver Catálogo Público</Text>
           </TouchableOpacity>
