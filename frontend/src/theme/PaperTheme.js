@@ -34,6 +34,8 @@ export const PaperDarkTheme = {
     primary: "#F48FB1", // Light Pink for Dark Mode
     secondary: "#A1887F", // Light Brown
     background: "#2C1B18", // Very Dark Brown
+    surface: "#3E2723", // Dark Brown Surface
     text: "#FCE4EC", // Very Light Pink
+    onSurface: "#FCE4EC",
   },
 };
