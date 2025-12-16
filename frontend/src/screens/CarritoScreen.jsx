@@ -1,86 +1,99 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, FlatList, Image } from "react-native";
 import { Text, Button, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAppContext } from "../context/AppContext";
 
 export default function CarritoScreen({ navigation }) {
   const theme = useTheme();
   const { colors } = theme;
+  const { cart } = useAppContext();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Carrito de Compras</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          Carrito de Compras
+        </Text>
         <View style={styles.badgeContainer}>
-             <Text style={styles.badgeText}>0 productos</Text>
+          <Text style={styles.badgeText}>{cart.length} productos</Text>
         </View>
       </View>
 
-      <View style={styles.content}>
-        <MaterialCommunityIcons 
-            name="cart-outline" 
-            size={100} 
-            color="#ccc" 
-            style={styles.icon}
-        />
-        <Text style={[styles.emptyText, { color: colors.text }]}>
+      {cart.length === 0 ? (
+        <View style={styles.content}>
+          <MaterialCommunityIcons
+            name="cart-outline"
+            size={100}
+            color="#ccc"
+          />
+          <Text style={[styles.emptyText, { color: colors.text }]}>
             Tu carrito está vacío
-        </Text>
-        
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate("Inicio")}
-          style={styles.button}
-          contentStyle={{ paddingVertical: 5 }}
-        >
-          Explorar Productos
-        </Button>
-      </View>
+          </Text>
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate("Inicio")}
+          >
+            Explorar Productos
+          </Button>
+        </View>
+      ) : (
+        <FlatList
+          data={cart}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.cartItem}>
+              <Image source={item.image} style={styles.cartImage} />
+              <View>
+                <Text style={{ fontWeight: "bold" }}>{item.name}</Text>
+                <Text>${item.price.toFixed(2)}</Text>
+              </View>
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
+  container: { flex: 1, padding: 16 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
-    marginTop: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
+  title: { fontSize: 22, fontWeight: "bold" },
   badgeContainer: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#eee",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  badgeText: {
-    color: '#888',
-    fontSize: 12,
-  },
+  badgeText: { fontSize: 12, color: "#555" },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  icon: {
-    marginBottom: 20,
-  },
   emptyText: {
     fontSize: 18,
-    marginBottom: 30,
-    textAlign: 'center',
+    marginVertical: 20,
+    textAlign: "center",
   },
-  button: {
-    borderRadius: 25,
-    paddingHorizontal: 20,
+  cartItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  cartImage: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
+    borderRadius: 8,
   },
 });
