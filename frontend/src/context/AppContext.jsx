@@ -6,46 +6,51 @@ export function AppProvider({ children }) {
     const [user, setUser] = useState(null);
     const [isDarkTheme, setIsDarkTheme] = useState(false);
 
-    // MODIFICADO: Función de login actualizada
+    // 🛒 CARRITO
+    const [cart, setCart] = useState([]);
+
+    // LOGIN
     const login = (username, password) => {
-        
-        // 1. CASO ADMIN: Credenciales específicas (Correo y Contraseña exactos)
-        // Se cambió la validación para requerir el correo completo
         if (username === 'admin@yeliscake.com' && password === 'admin123') {
             setUser({
                 nombre: "Administrador",
                 correo: "admin@yeliscake.com",
-                rol: "admin", // <--- ESTO ACTIVA EL PANEL DE ADMINISTRACIÓN
+                rol: "admin",
                 ingreso: new Date().toISOString().split('T')[0],
                 bio: "Gerente General"
             });
-            return true; // Login exitoso
+            return true;
         } 
-        
-        // 2. CASO CLIENTE: Cualquier otra credencial válida
-        // Si ingresan cualquier otra cosa, entran como cliente normal (Cristhian)
         else if (username && password) {
             setUser({
                 nombre: "Cristhian Perez",
-                // Si ingresaron un correo, lo usamos; si no, ponemos el de default
                 correo: username.includes('@') ? username : "cristhianperez@gmail.com",
-                rol: "client", // <--- Rol de cliente (NO ve el panel admin)
+                rol: "client",
                 ingreso: "2025-12-11",
                 bio: "Aplicaciones móviles séptimo A"
             });
             return true;
         }
-
-        // 3. Si faltan datos o las credenciales no coinciden con nada lógico
         return false;
     };
 
     const logout = () => {
         setUser(null);
+        setCart([]); // vaciar carrito al cerrar sesión
     };
 
     const toggleTheme = () => {
         setIsDarkTheme((prev) => !prev);
+    };
+
+    // ➕ Añadir producto al carrito
+    const addToCart = (product) => {
+        setCart((prev) => [...prev, product]);
+    };
+
+    // ❌ Vaciar carrito
+    const clearCart = () => {
+        setCart([]);
     };
 
     return (
@@ -54,12 +59,14 @@ export function AppProvider({ children }) {
             login, 
             logout, 
             isDarkTheme, 
-            toggleTheme 
+            toggleTheme,
+            cart,
+            addToCart,
+            clearCart
         }}>
             {children}
         </AppContext.Provider>
     );
 }
-export const useAppContext = () => {
-    return useContext(AppContext);
-};
+
+export const useAppContext = () => useContext(AppContext);
