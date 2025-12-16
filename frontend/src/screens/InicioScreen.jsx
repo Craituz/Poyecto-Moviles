@@ -10,7 +10,8 @@ import {
   Text,
   useTheme,
   Searchbar,
-  IconButton
+  IconButton,
+  Snackbar
 } from "react-native-paper";
 import { useAppContext } from "../context/AppContext";
 
@@ -18,63 +19,56 @@ const products = [
   {
     id: 1,
     name: "Chocoflan",
-    description:
-      "Chocoflan cremoso con caramelo, combinado con un bizcocho de chocolate húmedo que crea un contraste delicioso.",
+    description: "Chocoflan cremoso con caramelo.",
     price: 30.0,
     image: require("../../assets/chocoflan.jpg"),
   },
   {
     id: 2,
     name: "Pie de manzana",
-    description:
-      "Pie de manzana con relleno dulce y especiado, envuelto en una masa dorada y crujiente.",
+    description: "Pie de manzana dulce y crujiente.",
     price: 32.0,
     image: require("../../assets/piedemanzana.jpg"),
   },
   {
     id: 3,
     name: "Cupcake de Vainilla",
-    description:
-      "Suave y esponjoso con frosting de mantequilla.",
+    description: "Suave y esponjoso.",
     price: 15.0,
     image: require("../../assets/cupcake de vainilla.jpg"),
   },
   {
     id: 4,
     name: "Pastel de fresa",
-    description:
-      "Dulce y cremoso, para disfrutar con alguien.",
+    description: "Dulce y cremoso.",
     price: 15.0,
     image: require("../../assets/pastel-de-fresa.jpg"),
   },
 ];
 
 export default function InicioScreen() {
-  const { user } = useAppContext();
   const theme = useTheme();
   const { colors } = theme;
-  const [searchQuery, setSearchQuery] = useState("");
+  const { addToCart } = useAppContext();
 
-  const onChangeSearch = (query) => setSearchQuery(query);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [visible, setVisible] = useState(false);
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    setVisible(true);
+  };
 
   const renderItem = ({ item }) => (
     <View style={[styles.productCard, { backgroundColor: colors.surface }]}>
-      
-      <Image
-        source={item.image}
-        style={styles.productImage}
-        resizeMode="cover"
-      />
+      <Image source={item.image} style={styles.productImage} />
 
       <View style={styles.productInfo}>
         <Text style={[styles.productName, { color: colors.text }]}>
           {item.name}
         </Text>
 
-        <Text
-          style={[styles.productDesc, { color: colors.secondary }]}
-          numberOfLines={2}
-        >
+        <Text style={[styles.productDesc, { color: colors.secondary }]}>
           {item.description}
         </Text>
 
@@ -85,10 +79,11 @@ export default function InicioScreen() {
 
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: colors.primary }]}
+            onPress={() => handleAddToCart(item)}
           >
             <IconButton
               icon="cart-plus"
-              iconColor={theme.dark ? colors.surface : "white"}
+              iconColor="white"
               size={20}
             />
           </TouchableOpacity>
@@ -99,86 +94,45 @@ export default function InicioScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.logoText, { color: colors.text }]}>
-          🧁 Yeli's Cake
-        </Text>
-
-        <Searchbar
-          placeholder="Buscar productos..."
-          placeholderTextColor={colors.secondary}
-          onChangeText={onChangeSearch}
-          value={searchQuery}
-          style={[
-            styles.searchBar,
-            { backgroundColor: theme.dark ? colors.background : "#f0f0f0" },
-          ]}
-          inputStyle={[styles.searchInput, { color: colors.text }]}
-          iconColor={colors.secondary}
-          elevation={0}
-        />
-      </View>
-
       <FlatList
         data={products}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
       />
+
+      <Snackbar
+        visible={visible}
+        onDismiss={() => setVisible(false)}
+        duration={2000}
+      >
+        Tu producto ha sido añadido al carrito 🛒
+      </Snackbar>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 16,
-    paddingTop: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    elevation: 2,
-  },
-  logoText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginRight: 10,
-  },
-  searchBar: {
-    flex: 1,
-    height: 40,
-    borderRadius: 20,
-  },
-  searchInput: {
-    minHeight: 0,
-  },
-  listContent: {
-    padding: 16,
-  },
+  container: { flex: 1 },
+  listContent: { padding: 16 },
   productCard: {
     borderRadius: 15,
     marginBottom: 16,
-    elevation: 3,
     overflow: "hidden",
+    elevation: 3,
   },
   productImage: {
     width: "100%",
     height: 150,
   },
-  productInfo: {
-    padding: 12,
-  },
+  productInfo: { padding: 12 },
   productName: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 4,
   },
   productDesc: {
     fontSize: 14,
-    marginBottom: 12,
+    marginVertical: 6,
   },
   priceRow: {
     flexDirection: "row",
@@ -186,13 +140,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   price: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
   addButton: {
-    borderRadius: 20,
     width: 40,
     height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
