@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native"; // Necesario para la pantalla de prueba de Usuarios
+import { View, Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
@@ -13,7 +13,6 @@ import PedidosScreen from "../screens/PedidosScreen";
 import ConfigScreen from "../screens/ConfigScreen";
 
 // --- NUEVOS COMPONENTES DE ADMIN ---
-// Asegúrate de que estos archivos existan en src/components/admin/
 import AdminDashboard from "../components/admin/AdminDashboard";
 import AdminProducts from "../components/admin/AdminProducts";
 import AdminOrders from "../components/admin/AdminOrders";
@@ -31,17 +30,17 @@ export default function DashboardTabs() {
   const theme = useTheme();
   const { user } = useAppContext(); 
   
+  // LOGICA TEMPORAL: Detectar admin por correo electrónico
+  // (Hasta que agreguemos la columna 'rol' en la base de datos)
+  const isAdmin = user?.email === 'admin@yeliscake.com' || user?.rol === 'admin';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.secondary,
-        tabBarLabelStyle: {
-          fontSize: 10, // Letra un poco más pequeña para que quepan todos
-          marginBottom: 4,
-          fontWeight: 'bold',
-        },
+        tabBarLabelStyle: { fontSize: 10, marginBottom: 4, fontWeight: 'bold' },
         tabBarStyle: {
           height: 65,
           paddingBottom: 10,
@@ -53,12 +52,10 @@ export default function DashboardTabs() {
         tabBarIcon: ({ color, focused }) => {
           let iconName = "home";
           
-          // --- LÓGICA DE ÍCONOS ---
-          
           // 1. ÍCONOS DE ADMIN
           if (route.name === "Dashboard") iconName = "view-dashboard";
           else if (route.name === "Productos") iconName = "store";
-          else if (route.name === "AdminPedidos") iconName = "receipt"; // Nombre diferente para evitar conflicto
+          else if (route.name === "AdminPedidos") iconName = "receipt";
           else if (route.name === "Usuarios") iconName = "account-group";
 
           // 2. ÍCONOS DE CLIENTE
@@ -70,29 +67,26 @@ export default function DashboardTabs() {
           // 3. ÍCONO COMPARTIDO
           else if (route.name === "Perfil") iconName = focused ? "account" : "account-outline";
 
-          return (
-            <MaterialCommunityIcons name={iconName} size={26} color={color} />
-          );
+          return <MaterialCommunityIcons name={iconName} size={26} color={color} />;
         },
       })}
     >
-      {/* --- LÓGICA DE VISTAS SEGÚN EL ROL --- */}
-      
-      {user?.rol === 'admin' ? (
-        // 1. VISTA DE ADMINISTRADOR (5 Tabs Separadas)
+      {/* USAMOS LA NUEVA VARIABLE isAdmin */}
+      {isAdmin ? (
+        // VISTA DE ADMINISTRADOR
         <>
           <Tab.Screen name="Dashboard" component={AdminDashboard} />
           <Tab.Screen name="Productos" component={AdminProducts} />
           <Tab.Screen 
             name="AdminPedidos" 
             component={AdminOrders} 
-            options={{ tabBarLabel: 'Pedidos' }} // El nombre visible será "Pedidos"
+            options={{ tabBarLabel: 'Pedidos' }} 
           />
           <Tab.Screen name="Usuarios" component={AdminUsersScreen} />
           <Tab.Screen name="Perfil" component={PerfilScreen} />
         </>
       ) : (
-        // 2. VISTA DE CLIENTE (Tu menú original)
+        // VISTA DE CLIENTE
         <>
           <Tab.Screen name="Inicio" component={InicioScreen} />
           <Tab.Screen name="Carrito" component={CarritoScreen} />

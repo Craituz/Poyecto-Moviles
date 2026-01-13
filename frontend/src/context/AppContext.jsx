@@ -1,69 +1,87 @@
-import { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect, useMemo } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import apiClient from "../services/apiClient";
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
     const [user, setUser] = useState(null);
-    const [isDarkTheme, setIsDarkTheme] = useState(false);
+    const [token, setToken] = useState(null);
+    const [loadingAuth, setLoadingAuth] = useState(true);
 
-    // 🛒 CARRITO
+    const [isDarkTheme, setIsDarkTheme] = useState(false);
     const [cart, setCart] = useState([]);
 
-    // LOGIN
-    const login = (username, password) => {
-        if (username === 'admin@yeliscake.com' && password === 'admin123') {
-            setUser({
-                nombre: "Administrador",
-                correo: "admin@yeliscake.com",
-                rol: "admin",
-                ingreso: new Date().toISOString().split('T')[0],
-                bio: "Gerente General"
-            });
+
+    const login = async (userData, tokenValue) => {
+        try {
+            setUser(userData);
+            setToken(tokenValue);
+
+            await AsyncStorage.setItem("token", tokenValue);
+            await AsyncStorage.setItem("user", JSON.stringify(userData));
+            
+            console.log("💾 Sesión guardada: ", userData.email);
             return true;
-        } 
-        else if (username && password) {
-            setUser({
-                nombre: "Cristhian Perez",
-                correo: username.includes('@') ? username : "cristhianperez@gmail.com",
-                rol: "client",
-                ingreso: "2025-12-11",
-                bio: "Aplicaciones móviles séptimo A"
-            });
-            return true;
+        } catch (error) {
+            console.log("Error guardando sesión:", error);
+            return false;
         }
-        return false;
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await apiClient.post("/logout");
+        } catch (e) {
+            console.log("Logout local (sin conexión al server)");
+        }
+        
         setUser(null);
-        setCart([]); // vaciar carrito al cerrar sesión
+        setToken(null);
+        setCart([]); 
+        
+        await AsyncStorage.removeItem("token");
+        await AsyncStorage.removeItem("user");
     };
 
-    const toggleTheme = () => {
-        setIsDarkTheme((prev) => !prev);
-    };
+    useEffect(() => {
+        const loadSession = async () => {
+            try {
+                const storedToken = await AsyncStorage.getItem("token");
+                const storedUser = await AsyncStorage.getItem("user");
 
-    // ➕ Añadir producto al carrito
-    const addToCart = (product) => {
-        setCart((prev) => [...prev, product]);
-    };
+                if (storedToken && storedUser) {
+                    setToken(storedToken);
+                    setUser(JSON.parse(storedUser));
+                }
+            } catch (e) {
+                console.log("Error recuperando sesión:", e);
+            } finally {
+                setLoadingAuth(false);
+            }
+        };
+        loadSession();
+    }, []);
 
-    // ❌ Vaciar carrito
-    const clearCart = () => {
-        setCart([]);
-    };
+    const toggleTheme = () => setIsDarkTheme((prev) => !prev);
+    const addToCart = (product) => setCart((prev) => [...prev, product]);
+    const clearCart = () => setCart([]);
+
+    const value = useMemo(() => ({
+        user,
+        token,
+        loadingAuth,
+        login,
+        logout,
+        isDarkTheme,
+        toggleTheme,
+        cart,
+        addToCart,
+        clearCart
+    }), [user, token, loadingAuth, isDarkTheme, cart]);
 
     return (
-        <AppContext.Provider value={{ 
-            user, 
-            login, 
-            logout, 
-            isDarkTheme, 
-            toggleTheme,
-            cart,
-            addToCart,
-            clearCart
-        }}>
+        <AppContext.Provider value={value}>
             {children}
         </AppContext.Provider>
     );

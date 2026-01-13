@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { TextInput, Button, Text, Snackbar, Card, useTheme, Checkbox } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAppContext } from "../context/AppContext";
+import apiClient from "../services/apiClient";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAppContext();
@@ -15,30 +16,58 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [checked, setChecked] = useState(false);
 
-  const handleLogin = () => {
-    // 1. Validación básica de campos vacíos
+  const handleLogin = async () => {
+    console.log("📢 INTENTO DE LOGIN:");
+    console.log("   Email:", email);
+    console.log("   Pass :", password);
+
     if (!email || !password) {
       setError("Todos los campos son obligatorios.");
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      setError("");
 
-    // Simulamos un pequeño retraso de red
-    setTimeout(() => {
-      setLoading(false);
+      console.log("🚀 Enviando petición al servidor...");
+      
+      const { data } = await apiClient.post("/login", { 
+        email, 
+        password 
+      });
 
-      // 2. CAMBIO PRINCIPAL: Enviamos email y password al contexto
-      const success = login(email, password);
+      console.log("✅ RESPUESTA EXITOSA:", data);
 
-      if (success) {
-        // Si las credenciales son válidas (Admin o Cliente), entramos
-        navigation.replace("Dashboard");
+      await login(data.user, data.token);
+      navigation.replace("Dashboard");
+
+    } catch (err) {
+      console.log("❌ ------- ERROR DETECTADO ------- ❌");
+      if (err.response) {
+        console.log("📥 Datos del error:", err.response.data);
+        console.log("🔢 Código de estado:", err.response.status);
+        
+        if (err.response.status === 422) {
+             setError("Datos inválidos (Revisa el correo)");
+        } else if (err.response.status === 401) {
+             setError("Contraseña incorrecta");
+        } else {
+             setError("Error del servidor: " + err.response.status);
+        }
+
+      } else if (err.request) {
+        console.log("📡 Error de Red: El servidor no responde a la IP configurada.");
+        setError("Error de conexión. Revisa la IP y el Wifi.");
       } else {
-        // Si falló (aunque con la lógica actual solo falla si están vacíos, es buena práctica)
-        setError("Credenciales incorrectas.");
+        console.log("💥 Error Varios:", err.message);
+        setError("Ocurrió un error inesperado.");
       }
-    }, 800);
+      console.log("-------------------------------------");
+      
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,11 +90,9 @@ export default function LoginScreen({ navigation }) {
             onChangeText={setEmail}
             style={[styles.input, { backgroundColor: colors.surface }]}
             autoCapitalize="none"
-            // Quitamos keyboardType email estricto para facilitar escribir "admin"
-            // keyboardType="email-address" 
             underlineColor="transparent"
             activeUnderlineColor={colors.primary}
-            placeholder="ej. admin o cliente"
+            placeholder="ej. admin@yeliscake.com"
           />
           <View style={styles.underline} />
 
@@ -85,9 +112,7 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.checkboxContainer}>
                 <Checkbox
                     status={checked ? 'checked' : 'unchecked'}
-                    onPress={() => {
-                        setChecked(!checked);
-                    }}
+                    onPress={() => setChecked(!checked)}
                     color={colors.primary}
                 />
                 <Text style={{ color: colors.text }}>Recordarme</Text>
@@ -144,116 +169,27 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 22,
-  },
-  card: {
-    paddingVertical: 10,
-    elevation: 5,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  cardContent: {
-      alignItems: 'center',
-  },
-  logoContainer: {
-      alignItems: 'center',
-      marginBottom: 10,
-  },
-  logoBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 2,
-      borderRadius: 10,
-      marginTop: -5,
-  },
-  logoBadgeText: {
-      color: 'white',
-      fontSize: 10,
-      fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 5,
-    marginTop: 10,
-  },
-  subtitle: {
-      fontSize: 14,
-      marginBottom: 30,
-  },
-  label: {
-      alignSelf: 'flex-start',
-      fontWeight: 'bold',
-      marginBottom: 5,
-      marginTop: 10,
-      width: '100%',
-  },
-  input: {
-      width: '100%',
-      height: 40,
-      paddingHorizontal: 0,
-  },
-  underline: {
-      height: 1,
-      backgroundColor: '#ccc',
-      width: '100%',
-      marginBottom: 5,
-  },
-  rememberRow: {
-      width: '100%',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 10,
-  },
-  checkboxContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-  },
-  forgotContainer: {
-      alignSelf: 'flex-end',
-      marginBottom: 20,
-      marginTop: 10,
-      width: '100%',
-      alignItems: 'flex-end',
-  },
-  forgotText: {
-      fontSize: 14,
-  },
-  button: {
-      width: '100%',
-      borderRadius: 25,
-      marginBottom: 20,
-  },
-  newHere: {
-      color: '#666',
-      marginBottom: 10,
-  },
-  registerButton: {
-      width: '100%',
-      borderRadius: 25,
-      borderColor: '#D81B60',
-      marginBottom: 20,
-  },
-  catalogContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-  },
-  catalogText: {
-      marginLeft: 5,
-      fontSize: 16,
-  },
-  footer: {
-      alignItems: 'center',
-  },
-  footerText: {
-      color: '#666',
-      fontSize: 12,
-  },
-  footerSubText: {
-      color: '#666',
-      fontSize: 12,
-  }
+  container: { flex: 1, justifyContent: "center", padding: 22 },
+  card: { paddingVertical: 10, elevation: 5, borderRadius: 20, marginBottom: 20 },
+  cardContent: { alignItems: 'center' },
+  logoContainer: { alignItems: 'center', marginBottom: 10 },
+  logoBadge: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10, marginTop: -5 },
+  logoBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  title: { fontSize: 28, fontWeight: "bold", marginBottom: 5, marginTop: 10 },
+  subtitle: { fontSize: 14, marginBottom: 30 },
+  label: { alignSelf: 'flex-start', fontWeight: 'bold', marginBottom: 5, marginTop: 10, width: '100%' },
+  input: { width: '100%', height: 40, paddingHorizontal: 0 },
+  underline: { height: 1, backgroundColor: '#ccc', width: '100%', marginBottom: 5 },
+  rememberRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
+  forgotContainer: { alignSelf: 'flex-end', marginBottom: 20, marginTop: 10, width: '100%', alignItems: 'flex-end' },
+  forgotText: { fontSize: 14 },
+  button: { width: '100%', borderRadius: 25, marginBottom: 20 },
+  newHere: { color: '#666', marginBottom: 10 },
+  registerButton: { width: '100%', borderRadius: 25, borderColor: '#D81B60', marginBottom: 20 },
+  catalogContainer: { flexDirection: 'row', alignItems: 'center' },
+  catalogText: { marginLeft: 5, fontSize: 16 },
+  footer: { alignItems: 'center' },
+  footerText: { color: '#666', fontSize: 12 },
+  footerSubText: { color: '#666', fontSize: 12 }
 });
