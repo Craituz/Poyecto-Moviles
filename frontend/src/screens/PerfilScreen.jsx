@@ -1,82 +1,108 @@
 import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Avatar, Button, useTheme, Card } from "react-native-paper";
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
+import { Text, Avatar, Button, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAppContext } from "../context/AppContext";
-// 1. IMPORTAR ACCIONES DE NAVEGACIÓN
-import { useNavigation, CommonActions } from "@react-navigation/native";
+import apiClient from "../services/apiClient";
 
-export default function PerfilScreen() {
-  // 2. USAMOS 'logout' DEL CONTEXTO EN LUGAR DE 'setUser' MANUAL
+export default function PerfilScreen({ navigation }) {
   const { user, logout } = useAppContext();
   const theme = useTheme();
   const { colors } = theme;
-  
-  // 3. HOOK DE NAVEGACIÓN
-  const navigation = useNavigation();
 
-  // 4. FUNCIÓN DE CIERRE DE SESIÓN SEGURO
-  const handleLogout = () => {
-    // A. Limpia el usuario del contexto global
-    logout(); 
-    
-    // B. Resetea la pila de navegación para ir al Login y borrar historial
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      })
+  const handleLogout = async () => {
+    await logout(); 
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+        "Eliminar Cuenta",
+        "¿Estás seguro? Se borrará toda tu información de forma permanente.",
+        [
+            { text: "Cancelar", style: "cancel" },
+            { 
+                text: "Sí, Eliminar", 
+                style: "destructive", 
+                onPress: async () => {
+                    try {
+                        await apiClient.delete(`/users/${user.id}`);
+                        Alert.alert("Cuenta Eliminada", "Lamentamos verte partir.");
+                        logout(); 
+                    } catch (error) {
+                        const msg = error.response?.data?.message || "No se pudo eliminar la cuenta.";
+                        Alert.alert("Error", msg);
+                    }
+                }
+            }
+        ]
     );
   };
 
-  // Protección simple por si el usuario es null momentáneamente
   if (!user) return null;
+
+  // Datos del usuario
+  const userName = user.name || "Usuario";
+  const userEmail = user.email || "correo@ejemplo.com";
+  const userRole = user.roles && user.roles.length > 0 ? user.roles[0].name : "cliente";
+  const userPhone = user.phone || "No registrado";
+  const userAddress = user.address || "No registrada";
+  const userImage = user.image;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.screenTitle, { color: colors.text }]}>Mi Perfil</Text>
 
-      {/* TARJETA DE INFORMACIÓN DE USUARIO */}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        
         <View style={styles.profileHeader}>
-            <Avatar.Icon 
-                size={80} 
-                icon="account" 
-                style={{ backgroundColor: '#ccc' }}
-                color="white"
-            />
-            <View style={styles.editIconBadge}>
-                 <MaterialCommunityIcons name="pencil" size={16} color="white" />
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
+                <View>
+                    {userImage ? (
+                        <Avatar.Image 
+                            size={80} 
+                            source={{ uri: userImage }} 
+                            style={{ backgroundColor: colors.surfaceVariant }}
+                        />
+                    ) : (
+                        <Avatar.Icon 
+                            size={80} 
+                            icon="account" 
+                            style={{ backgroundColor: '#ccc' }}
+                            color="white"
+                        />
+                    )}
+                    
+                    <View style={styles.editIconBadge}>
+                        <MaterialCommunityIcons name="pencil" size={16} color="white" />
+                    </View>
+                </View>
+            </TouchableOpacity>
         </View>
         
         <Text style={[styles.userName, { color: colors.text }]}>
-            {user.nombre || "Usuario"}
+            {userName}
         </Text>
         
-        {/* Mostramos el Rol como una pequeña etiqueta */}
         <View style={{ alignItems: 'center', marginBottom: 15, marginTop: -15 }}>
             <Text style={{ color: colors.primary, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>
-                {user.rol === 'admin' ? 'Administrador' : 'Cliente'}
+                {userRole === 'admin' ? 'Administrador' : 'Cliente'}
             </Text>
         </View>
 
         <View style={styles.infoSection}>
             <Text style={styles.label}>Email</Text>
-            <Text style={[styles.value, { color: colors.text }]}>
-                {user.correo || "correo@ejemplo.com"}
-            </Text>
+            <Text style={[styles.value, { color: colors.text }]}>{userEmail}</Text>
             
             <Text style={styles.label}>Teléfono</Text>
-            <Text style={[styles.value, { color: colors.text }]}>096 350 7429</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{userPhone}</Text>
 
             <Text style={styles.label}>Dirección</Text>
-            <Text style={[styles.value, { color: colors.text }]}>Villa María</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{userAddress}</Text>
         </View>
 
         <Button 
             mode="outlined" 
-            onPress={() => {}} 
+            onPress={() => navigation.navigate('EditProfile')} 
             style={styles.editButton}
             textColor={colors.secondary}
         >
@@ -85,16 +111,22 @@ export default function PerfilScreen() {
 
         <Button 
             mode="contained" 
-            onPress={handleLogout} // <--- USAMOS LA NUEVA FUNCIÓN AQUÍ
+            onPress={handleLogout} 
             style={[styles.logoutButton, { backgroundColor: colors.primary }]}
             icon="logout"
             contentStyle={{ flexDirection: 'row-reverse' }}
         >
             Cerrar Sesión
         </Button>
+
+        <TouchableOpacity onPress={handleDeleteAccount} style={{marginTop: 20, alignItems: 'center'}}>
+            <Text style={{color: colors.error, fontSize: 12, textDecorationLine: 'underline'}}>
+                Eliminar mi cuenta permanentemente
+            </Text>
+        </TouchableOpacity>
+
       </View>
 
-      {/* SECCIÓN DE HISTORIAL */}
       <View style={[styles.card, { marginTop: 16, marginBottom: 30, backgroundColor: colors.surface }]}>
         <View style={styles.historyHeader}>
              <MaterialCommunityIcons name="history" size={24} color={colors.text} />
@@ -132,15 +164,16 @@ const styles = StyleSheet.create({
   profileHeader: {
       alignItems: 'center',
       marginBottom: 10,
-      position: 'relative',
   },
   editIconBadge: {
       position: 'absolute',
-      right: '35%',
+      right: 0, 
       bottom: 0,
-      backgroundColor: '#D81B60', // Pink
+      backgroundColor: '#D81B60', 
       borderRadius: 12,
-      padding: 4,
+      padding: 6, 
+      borderWidth: 2,
+      borderColor: 'white' 
   },
   userName: {
       fontSize: 20,
@@ -148,50 +181,14 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       marginBottom: 20,
   },
-  infoSection: {
-      marginBottom: 20,
-  },
-  label: {
-      color: '#888',
-      fontSize: 12,
-      marginBottom: 2,
-  },
-  value: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: 15,
-  },
-  editButton: {
-      borderColor: '#ccc',
-      borderWidth: 1,
-      marginBottom: 10,
-  },
-  logoutButton: {
-      marginTop: 5,
-  },
-  historyHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 10,
-  },
-  historyTitle: {
-      fontSize: 18,
-      marginLeft: 10,
-  },
-  sectionSubtitle: {
-      fontSize: 16,
-      marginBottom: 15,
-  },
-  emptyHistory: {
-      alignItems: 'center',
-      padding: 20,
-  },
-  emptyBox: {
-      width: 50,
-      height: 50,
-      borderWidth: 4,
-      borderColor: '#e0e0e0',
-      justifyContent: 'center',
-      alignItems: 'center',
-  }
+  infoSection: { marginBottom: 20 },
+  label: { color: '#888', fontSize: 12, marginBottom: 2 },
+  value: { fontSize: 16, fontWeight: 'bold', marginBottom: 15 },
+  editButton: { borderColor: '#ccc', borderWidth: 1, marginBottom: 10 },
+  logoutButton: { marginTop: 5 },
+  historyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  historyTitle: { fontSize: 18, marginLeft: 10 },
+  sectionSubtitle: { fontSize: 16, marginBottom: 15 },
+  emptyHistory: { alignItems: 'center', padding: 20 },
+  emptyBox: { width: 50, height: 50, borderWidth: 4, borderColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }
 });

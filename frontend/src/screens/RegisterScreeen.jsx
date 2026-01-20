@@ -1,38 +1,42 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import {
   TextInput,
   Button,
   Text,
   Snackbar,
   Card,
-  useTheme,
-  IconButton
+  useTheme
 } from "react-native-paper";
+import { useAppContext } from "../context/AppContext";
+import apiClient from "../services/apiClient";
 
 export default function RegisterScreen({ navigation }) {
+  const { login } = useAppContext();
+  const theme = useTheme();
+  const { colors } = theme;
 
+  // Estados del formulario
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [cpassword, setCpassword] = useState('');
+  
+  // Estados de control
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showCPassword, setShowCPassword] = useState(false);
 
-  const theme = useTheme();
-  const { colors } = theme;
-
-  // 🔎 VALIDACIONES
+  // 🔎 VALIDACIONES REGEX
   const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
 
+    // 1. Validaciones Locales
     if (!name || !email || !password || !cpassword || !phone || !address) {
       setError("Todos los campos son obligatorios.");
       return;
@@ -53,8 +57,8 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (password.length < 8) { // Laravel suele pedir min 8
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -63,16 +67,49 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
+    // 2. Conexión al Backend
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await apiClient.post("/register", {
+        name,
+        email,
+        password,
+        // Enviamos phone y address, aunque Laravel los ignorará si no están en la BD aún
+        phone, 
+        address
+      });
+
+      console.log("Registro exitoso:", response.data);
+
+      // 3. Auto-Login (Guardar token y entrar)
+      // App.js detectará esto y cambiará la pantalla automáticamente
+      await login(response.data.user, response.data.access_token);
+
+    } catch (err) {
+      console.log("❌ ERROR REGISTRO", err);
+      
+      if (err.response) {
+        // Manejo de errores de validación de Laravel (ej. Email duplicado)
+        const data = err.response.data;
+        if (err.response.status === 422) {
+             const firstError = data.errors ? Object.values(data.errors)[0][0] : data.message;
+             setError(firstError || "Datos inválidos (Email duplicado, etc)");
+        } else {
+            setError("Error al registrar usuario");
+        }
+      } else {
+        setError("Error de conexión. Verifica tu servidor.");
+      }
+    } finally {
       setLoading(false);
-      navigation.replace("Dashboard");
-    }, 800);
+    }
   };
 
   return (
     <ScrollView
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 16 }}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Card style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -92,11 +129,13 @@ export default function RegisterScreen({ navigation }) {
             value={name}
             onChangeText={setName}
             placeholder="Tu nombre"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
+            underlineColor="transparent"
+            activeUnderlineColor={colors.primary}
           />
           <View style={styles.underline} />
 
-          {/* Email & Phone */}
+          {/* Email & Phone (En fila) */}
           <View style={styles.row}>
             <View style={[styles.col, { marginRight: 10 }]}>
               <Text style={styles.label}>Correo Electrónico</Text>
@@ -106,7 +145,9 @@ export default function RegisterScreen({ navigation }) {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 placeholder="tu@email.com"
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface }]}
+                underlineColor="transparent"
+                activeUnderlineColor={colors.primary}
               />
               <View style={styles.underline} />
             </View>
@@ -119,7 +160,9 @@ export default function RegisterScreen({ navigation }) {
                 keyboardType="phone-pad"
                 maxLength={10}
                 placeholder="0987654321"
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface }]}
+                underlineColor="transparent"
+                activeUnderlineColor={colors.primary}
               />
               <View style={styles.underline} />
             </View>
@@ -131,7 +174,9 @@ export default function RegisterScreen({ navigation }) {
             value={address}
             onChangeText={setAddress}
             placeholder="Calle Principal #123"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
+            underlineColor="transparent"
+            activeUnderlineColor={colors.primary}
           />
           <View style={styles.underline} />
 
@@ -142,11 +187,14 @@ export default function RegisterScreen({ navigation }) {
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
             placeholder="********"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
+            underlineColor="transparent"
+            activeUnderlineColor={colors.primary}
             right={
               <TextInput.Icon
                 icon={showPassword ? "eye-off" : "eye"}
                 onPress={() => setShowPassword(!showPassword)}
+                color={colors.secondary}
               />
             }
           />
@@ -159,11 +207,14 @@ export default function RegisterScreen({ navigation }) {
             onChangeText={setCpassword}
             secureTextEntry={!showCPassword}
             placeholder="********"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
+            underlineColor="transparent"
+            activeUnderlineColor={colors.primary}
             right={
               <TextInput.Icon
                 icon={showCPassword ? "eye-off" : "eye"}
                 onPress={() => setShowCPassword(!showCPassword)}
+                color={colors.secondary}
               />
             }
           />
@@ -174,7 +225,8 @@ export default function RegisterScreen({ navigation }) {
             <Button
               mode="outlined"
               onPress={() => navigation.navigate("Login")}
-              style={{ marginRight: 10 }}
+              style={{ marginRight: 10, flex: 1, borderColor: colors.secondary }}
+              textColor={colors.secondary}
             >
               Volver
             </Button>
@@ -182,6 +234,7 @@ export default function RegisterScreen({ navigation }) {
               mode="contained"
               loading={loading}
               onPress={handleRegister}
+              style={{ flex: 1 }}
             >
               Crear Cuenta
             </Button>
@@ -194,6 +247,7 @@ export default function RegisterScreen({ navigation }) {
         visible={!!error}
         onDismiss={() => setError("")}
         duration={3000}
+        style={{ backgroundColor: '#D32F2F' }}
       >
         {error}
       </Snackbar>
@@ -202,14 +256,14 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1 },
   card: { borderRadius: 20, elevation: 5 },
-  title: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
-  subtitle: { textAlign: "center", marginBottom: 20 },
-  label: { fontWeight: "bold", marginTop: 10 },
-  input: { height: 40, fontSize: 14 },
+  title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginTop: 10 },
+  subtitle: { textAlign: "center", marginBottom: 20, fontSize: 12 },
+  label: { fontWeight: "bold", marginTop: 10, fontSize: 13, color: '#444' },
+  input: { height: 40, fontSize: 14, paddingHorizontal: 0 },
   underline: { height: 1, backgroundColor: "#ccc", marginBottom: 5 },
   row: { flexDirection: "row" },
   col: { flex: 1 },
-  buttonRow: { flexDirection: "row", marginTop: 20 }
+  buttonRow: { flexDirection: "row", marginTop: 30, marginBottom: 10, justifyContent: 'space-between' }
 });

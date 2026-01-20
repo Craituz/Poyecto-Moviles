@@ -12,17 +12,11 @@ import CarritoScreen from "../screens/CarritoScreen";
 import PedidosScreen from "../screens/PedidosScreen";
 import ConfigScreen from "../screens/ConfigScreen";
 
-// --- NUEVOS COMPONENTES DE ADMIN ---
+// --- COMPONENTES DE ADMIN ---
 import AdminDashboard from "../components/admin/AdminDashboard";
 import AdminProducts from "../components/admin/AdminProducts";
 import AdminOrders from "../components/admin/AdminOrders";
-
-// Pantalla provisional para Usuarios
-const AdminUsersScreen = () => (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Gestión de Usuarios (En construcción)</Text>
-    </View>
-);
+import AdminUsers from "../components/admin/AdminUsers"; 
 
 const Tab = createBottomTabNavigator();
 
@@ -30,9 +24,11 @@ export default function DashboardTabs() {
   const theme = useTheme();
   const { user } = useAppContext(); 
   
-  // LOGICA TEMPORAL: Detectar admin por correo electrónico
-  // (Hasta que agreguemos la columna 'rol' en la base de datos)
-  const isAdmin = user?.email === 'admin@yeliscake.com' || user?.rol === 'admin';
+  // 1. DETECTAR SI ES ADMIN
+  const isAdmin = user?.email === 'admin@yeliscake.com' || user?.roles?.[0]?.name === 'admin';
+
+  // 2. DETECTAR SI ES INVITADO
+  const isGuest = user?.id === 0 || user?.roles?.[0]?.name === 'guest';
 
   return (
     <Tab.Navigator
@@ -49,31 +45,32 @@ export default function DashboardTabs() {
           borderTopWidth: 0,
           elevation: 5,
         },
-        tabBarIcon: ({ color, focused }) => {
+        tabBarIcon: ({ color, focused, size }) => {
           let iconName = "home";
           
-          // 1. ÍCONOS DE ADMIN
+          // ÍCONOS ADMIN
           if (route.name === "Dashboard") iconName = "view-dashboard";
           else if (route.name === "Productos") iconName = "store";
           else if (route.name === "AdminPedidos") iconName = "receipt";
           else if (route.name === "Usuarios") iconName = "account-group";
 
-          // 2. ÍCONOS DE CLIENTE
-          else if (route.name === "Inicio") iconName = focused ? "home" : "home-outline";
+          // ÍCONOS CLIENTE / COMUNES
+          else if (route.name === "Inicio") iconName = focused ? "cake" : "cake-variant";
           else if (route.name === "Carrito") iconName = focused ? "cart" : "cart-outline";
-          else if (route.name === "Pedidos") iconName = focused ? "receipt" : "receipt-text-outline";
+          else if (route.name === "Pedidos") iconName = focused ? "clipboard-text" : "clipboard-text-outline";
           else if (route.name === "Config") iconName = focused ? "cog" : "cog-outline";
-          
-          // 3. ÍCONO COMPARTIDO
           else if (route.name === "Perfil") iconName = focused ? "account" : "account-outline";
+          
+          // ÍCONO SALIR (Invitado)
+          else if (route.name === "Salir") iconName = "logout";
 
           return <MaterialCommunityIcons name={iconName} size={26} color={color} />;
         },
       })}
     >
-      {/* USAMOS LA NUEVA VARIABLE isAdmin */}
+      
       {isAdmin ? (
-        // VISTA DE ADMINISTRADOR
+        // === VISTA 1: ADMINISTRADOR ===
         <>
           <Tab.Screen name="Dashboard" component={AdminDashboard} />
           <Tab.Screen name="Productos" component={AdminProducts} />
@@ -82,11 +79,34 @@ export default function DashboardTabs() {
             component={AdminOrders} 
             options={{ tabBarLabel: 'Pedidos' }} 
           />
-          <Tab.Screen name="Usuarios" component={AdminUsersScreen} />
+          
+          {/* <--- 2. COMPONENTE REAL CONECTADO */}
+          <Tab.Screen name="Usuarios" component={AdminUsers} />
+          
           <Tab.Screen name="Perfil" component={PerfilScreen} />
+          
+          <Tab.Screen 
+            name="Config" 
+            component={ConfigScreen} 
+            options={{ tabBarLabel: 'Ajustes' }} 
+          />
+        </>
+      ) : isGuest ? (
+        // === VISTA 2: INVITADO ===
+        <>
+          <Tab.Screen 
+            name="Inicio" 
+            component={InicioScreen} 
+            options={{ tabBarLabel: 'Catálogo' }}
+          />
+          <Tab.Screen 
+            name="Salir" 
+            component={PerfilScreen}
+            options={{ tabBarLabel: 'Salir / Login' }}
+          />
         </>
       ) : (
-        // VISTA DE CLIENTE
+        // === VISTA 3: CLIENTE REGISTRADO ===
         <>
           <Tab.Screen name="Inicio" component={InicioScreen} />
           <Tab.Screen name="Carrito" component={CarritoScreen} />

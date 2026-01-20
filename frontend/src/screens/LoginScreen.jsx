@@ -14,13 +14,10 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(false); // Estado para "Recordarme"
 
+  // --- LÓGICA DE CONEXIÓN REAL ---
   const handleLogin = async () => {
-    console.log("📢 INTENTO DE LOGIN:");
-    console.log("   Email:", email);
-    console.log("   Pass :", password);
-
     if (!email || !password) {
       setError("Todos los campos son obligatorios.");
       return;
@@ -30,50 +27,49 @@ export default function LoginScreen({ navigation }) {
       setLoading(true);
       setError("");
 
-      console.log("🚀 Enviando petición al servidor...");
-      
-      const { data } = await apiClient.post("/login", { 
-        email, 
-        password 
+      // 1. Petición al Backend Laravel
+      const response = await apiClient.post("/login", {
+        email,
+        password,
       });
 
-      console.log("✅ RESPUESTA EXITOSA:", data);
-
-      await login(data.user, data.token);
-      navigation.replace("Dashboard");
+      // 2. Si es exitoso, actualizamos el contexto global
+      // App.js detectará esto y cambiará la pantalla automáticamente.
+      await login(response.data.user, response.data.access_token);
 
     } catch (err) {
-      console.log("❌ ------- ERROR DETECTADO ------- ❌");
+      console.log("❌ ERROR LOGIN", err);
       if (err.response) {
-        console.log("📥 Datos del error:", err.response.data);
-        console.log("🔢 Código de estado:", err.response.status);
-        
-        if (err.response.status === 422) {
-             setError("Datos inválidos (Revisa el correo)");
-        } else if (err.response.status === 401) {
-             setError("Contraseña incorrecta");
-        } else {
-             setError("Error del servidor: " + err.response.status);
-        }
-
-      } else if (err.request) {
-        console.log("📡 Error de Red: El servidor no responde a la IP configurada.");
-        setError("Error de conexión. Revisa la IP y el Wifi.");
+        const status = err.response.status;
+        if (status === 401) setError("Credenciales incorrectas");
+        else if (status === 422) setError("Datos inválidos");
+        else setError("Error del servidor");
       } else {
-        console.log("💥 Error Varios:", err.message);
-        setError("Ocurrió un error inesperado.");
+        setError("No se pudo conectar con el servidor");
       }
-      console.log("-------------------------------------");
-      
     } finally {
       setLoading(false);
     }
+  };
+
+  // --- LÓGICA PARA ENTRAR COMO INVITADO ---
+  const handleGuestLogin = async () => {
+    // Creamos un usuario temporal para ver el catálogo
+    const guestUser = {
+        id: 0,
+        name: "Invitado",
+        email: "invitado@yeliscake.com",
+        roles: [{ name: "guest" }]
+    };
+    await login(guestUser, "guest_token");
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Card style={[styles.card, { backgroundColor: colors.surface }]}>
         <Card.Content style={styles.cardContent}>
+          
+          {/* LOGO Y TÍTULO */}
           <View style={styles.logoContainer}>
               <MaterialCommunityIcons name="cake-variant" size={40} color={colors.primary} />
               <View style={[styles.logoBadge, { backgroundColor: colors.primary }]}>
@@ -84,6 +80,7 @@ export default function LoginScreen({ navigation }) {
           <Text style={[styles.title, { color: colors.primary }]}>Yeli's Cake</Text>
           <Text style={[styles.subtitle, { color: '#666' }]}>Ingresa a tu cuenta para continuar</Text>
           
+          {/* CAMPO CORREO */}
           <Text style={styles.label}>Usuario / Correo</Text>
           <TextInput
             value={email}
@@ -96,6 +93,7 @@ export default function LoginScreen({ navigation }) {
           />
           <View style={styles.underline} />
 
+          {/* CAMPO CONTRASEÑA */}
           <Text style={styles.label}>Contraseña</Text>
           <TextInput
             secureTextEntry
@@ -108,6 +106,7 @@ export default function LoginScreen({ navigation }) {
           />
           <View style={styles.underline} />
 
+          {/* CHECKBOX RECORDARME */}
           <View style={styles.rememberRow}>
             <View style={styles.checkboxContainer}>
                 <Checkbox
@@ -119,10 +118,12 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
 
+          {/* OLVIDASTE CONTRASEÑA */}
           <TouchableOpacity onPress={() => {}} style={styles.forgotContainer}>
             <Text style={[styles.forgotText, { color: colors.primary }]}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
+          {/* BOTÓN INICIAR SESIÓN */}
           <Button
             mode="contained"
             loading={loading}
@@ -135,6 +136,7 @@ export default function LoginScreen({ navigation }) {
 
           <Text style={styles.newHere}>¿NUEVO AQUÍ?</Text>
 
+          {/* BOTÓN REGISTRARSE */}
           <Button
             mode="outlined"
             onPress={() => navigation.navigate("Register")}
@@ -145,21 +147,26 @@ export default function LoginScreen({ navigation }) {
             CREAR CUENTA NUEVA
           </Button>
 
-            <TouchableOpacity onPress={() => {}} style={styles.catalogContainer}>
-                <MaterialCommunityIcons name="magnify" size={20} color={colors.secondary} />
-                <Text style={[styles.catalogText, { color: colors.primary }]}>Ver Catálogo Público</Text>
+          {/* BOTÓN CATÁLOGO PÚBLICO */}
+          <TouchableOpacity onPress={handleGuestLogin} style={styles.catalogContainer}>
+              <MaterialCommunityIcons name="magnify" size={20} color={colors.secondary} />
+              <Text style={[styles.catalogText, { color: colors.primary }]}>Ver Catálogo Público</Text>
           </TouchableOpacity>
 
         </Card.Content>
       </Card>
+
+      {/* MENSAJES DE ERROR */}
       <Snackbar
         visible={!!error}
         onDismiss={() => setError("")}
         duration={3000}
+        style={{ backgroundColor: '#D32F2F' }} // Rojo para errores
       >
         {error}
       </Snackbar>
       
+      {/* FOOTER */}
       <View style={styles.footer}>
           <Text style={styles.footerText}>© 2025 Yeli's Cake</Text>
           <Text style={styles.footerSubText}>Endulzando tus momentos especiales</Text>
@@ -169,27 +176,116 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 22 },
-  card: { paddingVertical: 10, elevation: 5, borderRadius: 20, marginBottom: 20 },
-  cardContent: { alignItems: 'center' },
-  logoContainer: { alignItems: 'center', marginBottom: 10 },
-  logoBadge: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10, marginTop: -5 },
-  logoBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 5, marginTop: 10 },
-  subtitle: { fontSize: 14, marginBottom: 30 },
-  label: { alignSelf: 'flex-start', fontWeight: 'bold', marginBottom: 5, marginTop: 10, width: '100%' },
-  input: { width: '100%', height: 40, paddingHorizontal: 0 },
-  underline: { height: 1, backgroundColor: '#ccc', width: '100%', marginBottom: 5 },
-  rememberRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
-  checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
-  forgotContainer: { alignSelf: 'flex-end', marginBottom: 20, marginTop: 10, width: '100%', alignItems: 'flex-end' },
-  forgotText: { fontSize: 14 },
-  button: { width: '100%', borderRadius: 25, marginBottom: 20 },
-  newHere: { color: '#666', marginBottom: 10 },
-  registerButton: { width: '100%', borderRadius: 25, borderColor: '#D81B60', marginBottom: 20 },
-  catalogContainer: { flexDirection: 'row', alignItems: 'center' },
-  catalogText: { marginLeft: 5, fontSize: 16 },
-  footer: { alignItems: 'center' },
-  footerText: { color: '#666', fontSize: 12 },
-  footerSubText: { color: '#666', fontSize: 12 }
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 22,
+  },
+  card: {
+    paddingVertical: 10,
+    elevation: 5,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  cardContent: {
+      alignItems: 'center',
+  },
+  logoContainer: {
+      alignItems: 'center',
+      marginBottom: 10,
+  },
+  logoBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+      borderRadius: 10,
+      marginTop: -5,
+  },
+  logoBadgeText: {
+      color: 'white',
+      fontSize: 10,
+      fontWeight: 'bold',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 5,
+    marginTop: 10,
+  },
+  subtitle: {
+      fontSize: 14,
+      marginBottom: 30,
+  },
+  label: {
+      alignSelf: 'flex-start',
+      fontWeight: 'bold',
+      marginBottom: 5,
+      marginTop: 10,
+      width: '100%',
+  },
+  input: {
+      width: '100%',
+      height: 40,
+      paddingHorizontal: 0,
+  },
+  underline: {
+      height: 1,
+      backgroundColor: '#ccc',
+      width: '100%',
+      marginBottom: 5,
+  },
+  rememberRow: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+  },
+  checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+  },
+  forgotContainer: {
+      alignSelf: 'flex-end',
+      marginBottom: 20,
+      marginTop: 10,
+      width: '100%',
+      alignItems: 'flex-end',
+  },
+  forgotText: {
+      fontSize: 14,
+  },
+  button: {
+      width: '100%',
+      borderRadius: 25,
+      marginBottom: 20,
+  },
+  newHere: {
+      color: '#666',
+      marginBottom: 10,
+  },
+  registerButton: {
+      width: '100%',
+      borderRadius: 25,
+      borderColor: '#D81B60',
+      marginBottom: 20,
+  },
+  catalogContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+  },
+  catalogText: {
+      marginLeft: 5,
+      fontSize: 16,
+  },
+  footer: {
+      alignItems: 'center',
+  },
+  footerText: {
+      color: '#666',
+      fontSize: 12,
+  },
+  footerSubText: {
+      color: '#666',
+      fontSize: 12,
+  }
 });
