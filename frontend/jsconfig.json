@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "checkJs": false,
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": [
+    "node_modules", 
+    "babel.config.js", 
+    "metro.config.js", 
+    "jest.config.js"
+  ]
+}

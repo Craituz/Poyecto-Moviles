@@ -43,11 +43,33 @@ class AuthController extends Controller
     {
         // 1. Validamos nombre, email, password, Y AHORA TELÉFONO Y DIRECCIÓN
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-            'phone' => 'required|string|min:10|max:15', // <--- NUEVO
-            'address' => 'required|string|max:500',    // <--- NUEVO
+            'name' => 'required|string|min:3|max:50|unique:users,name',
+            'email' => 'required|email|max:30|unique:users,email',
+            'password' => 'required|string|min:8|max:15',
+            'phone' => 'required|string|size:10|unique:users,phone',
+            'address' => 'required|string|max:80',
+        ], [
+            // Mensajes personalizados en español
+            'name.required' => 'El nombre es obligatorio',
+            'name.min' => 'El nombre debe tener al menos 3 caracteres',
+            'name.max' => 'El nombre no puede superar los 50 caracteres',
+            'name.unique' => 'Este nombre de usuario ya está en uso',
+            
+            'email.required' => 'El correo electrónico es obligatorio',
+            'email.email' => 'El correo debe tener un formato válido',
+            'email.max' => 'El correo no puede superar los 30 caracteres',
+            'email.unique' => 'Este correo electrónico ya está registrado',
+            
+            'password.required' => 'La contraseña es obligatoria',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres',
+            'password.max' => 'La contraseña no puede superar los 15 caracteres',
+            
+            'phone.required' => 'El teléfono es obligatorio',
+            'phone.size' => 'El teléfono debe tener exactamente 10 dígitos',
+            'phone.unique' => 'Este número de teléfono ya está registrado',
+            
+            'address.required' => 'La dirección es obligatoria',
+            'address.max' => 'La dirección no puede superar los 80 caracteres',
         ]);
 
         // 2. Creamos el usuario guardando todos los datos

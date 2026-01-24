@@ -16,6 +16,8 @@ import NewProductScreen from './src/screens/NewProductScreen';
 import EditProductScreen from './src/screens/EditProductScreen';
 import EditUserScreen from './src/screens/EditUserScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen'; // <--- 1. NUEVA IMPORTACIÓN
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -90,6 +92,16 @@ function MainLayout() {
             <>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen 
+                name="ForgotPassword" 
+                component={ForgotPasswordScreen} 
+                options={{ headerShown: true, title: 'Recuperar contraseña' }}
+              />
+              <Stack.Screen 
+                name="ResetPassword" 
+                component={ResetPasswordScreen} 
+                options={{ headerShown: true, title: 'Restablecer contraseña' }}
+              />
             </>
           )}
 

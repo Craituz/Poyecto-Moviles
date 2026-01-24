@@ -6,10 +6,22 @@ import {
   Text,
   Snackbar,
   Card,
-  useTheme
+  useTheme,
+  HelperText
 } from "react-native-paper";
 import { useAppContext } from "../context/AppContext";
 import apiClient from "../services/apiClient";
+import { 
+  validateName, 
+  validateEmail, 
+  validatePhone, 
+  validateAddress, 
+  validatePassword, 
+  validateConfirmPassword,
+  sanitizePhone,
+  countWords
+} from "../utils/validators";
+import { LIMITS } from "../utils/constants";
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useAppContext();
@@ -30,44 +42,70 @@ export default function RegisterScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showCPassword, setShowCPassword] = useState(false);
 
-  // 🔎 VALIDACIONES REGEX
-  const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+  // === VALIDACIONES DE CAMPOS INDIVIDUALES ===
+  const nameError = validateName(name);
+  const emailError = validateEmail(email);
+  const phoneError = validatePhone(phone);
+  const addressError = validateAddress(address);
+  const passwordError = validatePassword(password);
+  const cpasswordError = validateConfirmPassword(password, cpassword);
+
+  // === VALIDACIÓN COMPLETA ===
+  const isFormValid = 
+    name && !nameError &&
+    email && !emailError &&
+    phone && !phoneError &&
+    address && !addressError &&
+    password && !passwordError &&
+    cpassword && !cpasswordError;
+
+  // === MANEJADORES DE CAMBIO DE TEXTO ===
+  const handleNameChange = (text) => {
+    if (text.length <= LIMITS.NAME.MAX) {
+      setName(text);
+    }
+  };
+
+  const handleEmailChange = (text) => {
+    if (text.length <= LIMITS.EMAIL.MAX) {
+      setEmail(text.toLowerCase());
+    }
+  };
+
+  const handlePhoneChange = (text) => {
+    const cleanText = sanitizePhone(text);
+    if (cleanText.length <= LIMITS.PHONE.EXACT) {
+      setPhone(cleanText);
+    }
+  };
+
+  const handleAddressChange = (text) => {
+    const wordCount = countWords(text);
+    if (wordCount <= LIMITS.ADDRESS.MAX_WORDS && text.length <= LIMITS.ADDRESS.MAX_CHARS) {
+      setAddress(text);
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    if (text.length <= LIMITS.PASSWORD.MAX) {
+      setPassword(text);
+    }
+  };
+
+  const handleCPasswordChange = (text) => {
+    if (text.length <= LIMITS.PASSWORD.MAX) {
+      setCpassword(text);
+    }
+  };
 
   const handleRegister = async () => {
-
-    // 1. Validaciones Locales
-    if (!name || !email || !password || !cpassword || !phone || !address) {
-      setError("Todos los campos son obligatorios.");
+    // Validación final del frontend
+    if (!isFormValid) {
+      setError("Por favor, completa correctamente todos los campos");
       return;
     }
 
-    if (!nameRegex.test(name)) {
-      setError("El nombre solo debe contener letras y espacios.");
-      return;
-    }
-
-    if (!emailRegex.test(email)) {
-      setError("El correo electrónico no tiene un formato válido.");
-      return;
-    }
-
-    if (!/^\d{10}$/.test(phone)) {
-      setError("El número de teléfono debe tener exactamente 10 dígitos.");
-      return;
-    }
-
-    if (password.length < 8) { // Laravel suele pedir min 8
-      setError("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-
-    if (password !== cpassword) {
-      setError("Las contraseñas no coinciden.");
-      return;
-    }
-
-    // 2. Conexión al Backend
+    // Conexión al Backend
     try {
       setLoading(true);
       setError("");
@@ -76,31 +114,35 @@ export default function RegisterScreen({ navigation }) {
         name,
         email,
         password,
-        // Enviamos phone y address, aunque Laravel los ignorará si no están en la BD aún
         phone, 
         address
       });
 
-      console.log("Registro exitoso:", response.data);
+      console.log("✅ Registro exitoso:", response.data);
 
-      // 3. Auto-Login (Guardar token y entrar)
-      // App.js detectará esto y cambiará la pantalla automáticamente
+      // Auto-Login
       await login(response.data.user, response.data.access_token);
 
     } catch (err) {
       console.log("❌ ERROR REGISTRO", err);
       
       if (err.response) {
-        // Manejo de errores de validación de Laravel (ej. Email duplicado)
         const data = err.response.data;
-        if (err.response.status === 422) {
-             const firstError = data.errors ? Object.values(data.errors)[0][0] : data.message;
-             setError(firstError || "Datos inválidos (Email duplicado, etc)");
+        
+        // Manejo mejorado de errores de validación (422)
+        if (err.response.status === 422 && data.errors) {
+          // Extraer todos los mensajes de error
+          const errorMessages = Object.values(data.errors).flat();
+          setError(errorMessages.join('\n'));
+        } else if (data.message) {
+          setError(data.message);
         } else {
-            setError("Error al registrar usuario");
+          setError("Error al registrar usuario");
         }
+      } else if (err.request) {
+        setError("No se pudo conectar con el servidor. Verifica tu conexión.");
       } else {
-        setError("Error de conexión. Verifica tu servidor.");
+        setError("Error inesperado. Intenta nuevamente.");
       }
     } finally {
       setLoading(false);
@@ -123,73 +165,107 @@ export default function RegisterScreen({ navigation }) {
             Únete a Yeli's Cake y disfruta de nuestros productos
           </Text>
 
-          {/* Nombre */}
+          {/* === NOMBRE === */}
           <Text style={styles.label}>Nombre Completo</Text>
           <TextInput
             value={name}
-            onChangeText={setName}
+            onChangeText={handleNameChange}
             placeholder="Tu nombre"
+            maxLength={50}
             style={[styles.input, { backgroundColor: colors.surface }]}
             underlineColor="transparent"
-            activeUnderlineColor={colors.primary}
+            activeUnderlineColor={nameError ? '#D32F2F' : colors.primary}
+            error={!!nameError}
           />
-          <View style={styles.underline} />
+          {nameError && (
+            <HelperText type="error" visible={!!nameError}>
+              {nameError}
+            </HelperText>
+          )}
+          <Text style={styles.charCount}>{name.length}/{LIMITS.NAME.MAX}</Text>
 
-          {/* Email & Phone (En fila) */}
+          {/* === EMAIL & TELÉFONO (Fila) === */}
           <View style={styles.row}>
             <View style={[styles.col, { marginRight: 10 }]}>
-              <Text style={styles.label}>Correo Electrónico</Text>
+              <Text style={styles.label}>Correo @Gmail</Text>
               <TextInput
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="tu@email.com"
+                placeholder="tu@gmail.com"
+                maxLength={LIMITS.EMAIL.MAX}
                 style={[styles.input, { backgroundColor: colors.surface }]}
                 underlineColor="transparent"
-                activeUnderlineColor={colors.primary}
+                activeUnderlineColor={emailError ? '#D32F2F' : colors.primary}
+                error={!!emailError}
               />
-              <View style={styles.underline} />
+              {emailError && (
+                <HelperText type="error" visible={!!emailError} style={{ fontSize: 11 }}>
+                  {emailError}
+                </HelperText>
+              )}
+              <Text style={styles.charCount}>{email.length}/{LIMITS.EMAIL.MAX}</Text>
             </View>
 
             <View style={styles.col}>
               <Text style={styles.label}>Teléfono</Text>
               <TextInput
                 value={phone}
-                onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, ""))}
+                onChangeText={handlePhoneChange}
                 keyboardType="phone-pad"
-                maxLength={10}
+                maxLength={LIMITS.PHONE.EXACT}
                 placeholder="0987654321"
                 style={[styles.input, { backgroundColor: colors.surface }]}
                 underlineColor="transparent"
-                activeUnderlineColor={colors.primary}
+                activeUnderlineColor={phoneError ? '#D32F2F' : colors.primary}
+                error={!!phoneError}
               />
-              <View style={styles.underline} />
+              {phoneError && (
+                <HelperText type="error" visible={!!phoneError} style={{ fontSize: 11 }}>
+                  {phoneError}
+                </HelperText>
+              )}
+              <Text style={styles.charCount}>{phone.length}/{LIMITS.PHONE.EXACT}</Text>
             </View>
           </View>
 
-          {/* Dirección */}
+          {/* === DIRECCIÓN === */}
           <Text style={styles.label}>Dirección</Text>
           <TextInput
             value={address}
-            onChangeText={setAddress}
+            onChangeText={handleAddressChange}
             placeholder="Calle Principal #123"
+            maxLength={LIMITS.ADDRESS.MAX_CHARS}
             style={[styles.input, { backgroundColor: colors.surface }]}
             underlineColor="transparent"
-            activeUnderlineColor={colors.primary}
+            activeUnderlineColor={addressError ? '#D32F2F' : colors.primary}
+            error={!!addressError}
           />
-          <View style={styles.underline} />
+          {addressError && (
+            <HelperText type="error" visible={!!addressError}>
+              {addressError}
+            </HelperText>
+          )}
+          <View style={styles.charCountRow}>
+            <Text style={styles.charCount}>{address.length}/{LIMITS.ADDRESS.MAX_CHARS}</Text>
+            <Text style={styles.wordCount}>
+              {countWords(address)}/{LIMITS.ADDRESS.MAX_WORDS} palabras
+            </Text>
+          </View>
 
-          {/* Contraseña */}
+          {/* === CONTRASEÑA === */}
           <Text style={styles.label}>Contraseña</Text>
           <TextInput
             value={password}
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
             secureTextEntry={!showPassword}
-            placeholder="********"
+            placeholder="Mínimo 8, máximo 15 caracteres"
+            maxLength={LIMITS.PASSWORD.MAX}
             style={[styles.input, { backgroundColor: colors.surface }]}
             underlineColor="transparent"
-            activeUnderlineColor={colors.primary}
+            activeUnderlineColor={passwordError ? '#D32F2F' : colors.primary}
+            error={!!passwordError}
             right={
               <TextInput.Icon
                 icon={showPassword ? "eye-off" : "eye"}
@@ -198,18 +274,25 @@ export default function RegisterScreen({ navigation }) {
               />
             }
           />
-          <View style={styles.underline} />
+          {passwordError && (
+            <HelperText type="error" visible={!!passwordError}>
+              {passwordError}
+            </HelperText>
+          )}
+          <Text style={styles.charCount}>{password.length}/{LIMITS.PASSWORD.MAX}</Text>
 
-          {/* Confirmar Contraseña */}
+          {/* === CONFIRMAR CONTRASEÑA === */}
           <Text style={styles.label}>Confirmar Contraseña</Text>
           <TextInput
             value={cpassword}
-            onChangeText={setCpassword}
+            onChangeText={handleCPasswordChange}
             secureTextEntry={!showCPassword}
-            placeholder="********"
+            placeholder="Repite tu contraseña"
+            maxLength={LIMITS.PASSWORD.MAX}
             style={[styles.input, { backgroundColor: colors.surface }]}
             underlineColor="transparent"
-            activeUnderlineColor={colors.primary}
+            activeUnderlineColor={cpasswordError ? '#D32F2F' : colors.primary}
+            error={!!cpasswordError}
             right={
               <TextInput.Icon
                 icon={showCPassword ? "eye-off" : "eye"}
@@ -218,9 +301,14 @@ export default function RegisterScreen({ navigation }) {
               />
             }
           />
-          <View style={styles.underline} />
+          {cpasswordError && (
+            <HelperText type="error" visible={!!cpasswordError}>
+              {cpasswordError}
+            </HelperText>
+          )}
+          <Text style={styles.charCount}>{cpassword.length}/{LIMITS.PASSWORD.MAX}</Text>
 
-          {/* Botones */}
+          {/* === BOTONES === */}
           <View style={styles.buttonRow}>
             <Button
               mode="outlined"
@@ -233,6 +321,7 @@ export default function RegisterScreen({ navigation }) {
             <Button
               mode="contained"
               loading={loading}
+              disabled={!isFormValid || loading}
               onPress={handleRegister}
               style={{ flex: 1 }}
             >
@@ -260,10 +349,22 @@ const styles = StyleSheet.create({
   card: { borderRadius: 20, elevation: 5 },
   title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginTop: 10 },
   subtitle: { textAlign: "center", marginBottom: 20, fontSize: 12 },
-  label: { fontWeight: "bold", marginTop: 10, fontSize: 13, color: '#444' },
+  label: { fontWeight: "bold", marginTop: 12, fontSize: 13, color: '#444' },
   input: { height: 40, fontSize: 14, paddingHorizontal: 0 },
-  underline: { height: 1, backgroundColor: "#ccc", marginBottom: 5 },
   row: { flexDirection: "row" },
   col: { flex: 1 },
-  buttonRow: { flexDirection: "row", marginTop: 30, marginBottom: 10, justifyContent: 'space-between' }
+  charCount: { fontSize: 11, color: '#999', marginTop: 2, marginBottom: 8 },
+  charCountRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    marginTop: 2, 
+    marginBottom: 8 
+  },
+  wordCount: { fontSize: 11, color: '#999' },
+  buttonRow: { 
+    flexDirection: "row", 
+    marginTop: 30, 
+    marginBottom: 10, 
+    justifyContent: 'space-between' 
+  }
 });

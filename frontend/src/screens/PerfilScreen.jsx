@@ -9,6 +9,7 @@ export default function PerfilScreen({ navigation }) {
   const { user, logout } = useAppContext();
   const theme = useTheme();
   const { colors } = theme;
+    const isGuest = !user || user?.id === 0 || user?.roles?.[0]?.name === 'guest';
 
   const handleLogout = async () => {
     await logout(); 
@@ -38,15 +39,67 @@ export default function PerfilScreen({ navigation }) {
     );
   };
 
-  if (!user) return null;
+    // Vista para Invitado (no logueado)
+    if (isGuest) {
+        return (
+            <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+                <Text style={[styles.screenTitle, { color: colors.text }]}>Mi Perfil</Text>
 
-  // Datos del usuario
-  const userName = user.name || "Usuario";
-  const userEmail = user.email || "correo@ejemplo.com";
-  const userRole = user.roles && user.roles.length > 0 ? user.roles[0].name : "cliente";
-  const userPhone = user.phone || "No registrado";
-  const userAddress = user.address || "No registrada";
-  const userImage = user.image;
+                <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                    <View style={styles.profileHeader}>
+                        <Avatar.Icon 
+                            size={80} 
+                            icon="account" 
+                            style={{ backgroundColor: '#ccc' }}
+                            color="white"
+                        />
+                    </View>
+
+                    <Text style={[styles.userName, { color: colors.text }]}>Invitado</Text>
+                    <View style={{ alignItems: 'center', marginBottom: 15, marginTop: -15 }}>
+                        <Text style={{ color: colors.primary, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                            Navega el catálogo
+                        </Text>
+                    </View>
+
+                    <View style={styles.infoSection}>
+                        <Text style={styles.label}>Estado</Text>
+                        <Text style={[styles.value, { color: colors.text }]}>Modo invitado</Text>
+                        <Text style={styles.label}>Acceso</Text>
+                        <Text style={[styles.value, { color: colors.text }]}>Regístrate para comprar y guardar tus datos</Text>
+                    </View>
+
+                    <Button 
+                        mode="contained" 
+                        onPress={async () => { await logout(); navigation.navigate('Register'); }} 
+                        style={[styles.logoutButton, { backgroundColor: colors.primary }]}
+                        icon="account-plus"
+                        contentStyle={{ flexDirection: 'row-reverse' }}
+                    >
+                        Registrate
+                    </Button>
+
+                    <Button 
+                        mode="outlined" 
+                        onPress={async () => { await logout(); navigation.navigate('Login'); }} 
+                        style={[styles.editButton, { marginTop: 10 }]} 
+                        textColor={colors.secondary}
+                        icon="arrow-left"
+                    >
+                        Volver
+                    </Button>
+                </View>
+            </ScrollView>
+        );
+    }
+
+    // Datos del usuario (logueado)
+    const userName = user.name || "Usuario";
+    const userEmail = user.email || "correo@ejemplo.com";
+    const userRole = user.roles && user.roles.length > 0 ? user.roles[0].name : "cliente";
+    const userPhone = user.phone || "No registrado";
+    const userAddress = user.address || "No registrada";
+    const userImage = user.image;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>

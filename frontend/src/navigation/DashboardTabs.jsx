@@ -24,10 +24,8 @@ export default function DashboardTabs() {
   const theme = useTheme();
   const { user } = useAppContext(); 
   
-  // 1. DETECTAR SI ES ADMIN
   const isAdmin = user?.email === 'admin@yeliscake.com' || user?.roles?.[0]?.name === 'admin';
 
-  // 2. DETECTAR SI ES INVITADO
   const isGuest = user?.id === 0 || user?.roles?.[0]?.name === 'guest';
 
   return (
@@ -48,20 +46,17 @@ export default function DashboardTabs() {
         tabBarIcon: ({ color, focused, size }) => {
           let iconName = "home";
           
-          // ÍCONOS ADMIN
           if (route.name === "Dashboard") iconName = "view-dashboard";
           else if (route.name === "Productos") iconName = "store";
           else if (route.name === "AdminPedidos") iconName = "receipt";
           else if (route.name === "Usuarios") iconName = "account-group";
 
-          // ÍCONOS CLIENTE / COMUNES
           else if (route.name === "Inicio") iconName = focused ? "cake" : "cake-variant";
           else if (route.name === "Carrito") iconName = focused ? "cart" : "cart-outline";
           else if (route.name === "Pedidos") iconName = focused ? "clipboard-text" : "clipboard-text-outline";
           else if (route.name === "Config") iconName = focused ? "cog" : "cog-outline";
           else if (route.name === "Perfil") iconName = focused ? "account" : "account-outline";
           
-          // ÍCONO SALIR (Invitado)
           else if (route.name === "Salir") iconName = "logout";
 
           return <MaterialCommunityIcons name={iconName} size={26} color={color} />;
@@ -70,7 +65,6 @@ export default function DashboardTabs() {
     >
       
       {isAdmin ? (
-        // === VISTA 1: ADMINISTRADOR ===
         <>
           <Tab.Screen name="Dashboard" component={AdminDashboard} />
           <Tab.Screen name="Productos" component={AdminProducts} />
@@ -80,7 +74,6 @@ export default function DashboardTabs() {
             options={{ tabBarLabel: 'Pedidos' }} 
           />
           
-          {/* <--- 2. COMPONENTE REAL CONECTADO */}
           <Tab.Screen name="Usuarios" component={AdminUsers} />
           
           <Tab.Screen name="Perfil" component={PerfilScreen} />
@@ -92,7 +85,6 @@ export default function DashboardTabs() {
           />
         </>
       ) : isGuest ? (
-        // === VISTA 2: INVITADO ===
         <>
           <Tab.Screen 
             name="Inicio" 
