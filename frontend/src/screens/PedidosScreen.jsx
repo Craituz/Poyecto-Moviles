@@ -3,7 +3,10 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList, RefreshContro
 import { Text, useTheme, ActivityIndicator, Card, Divider, Chip } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useAppContext } from "../context/AppContext";
 import apiClient from "../services/apiClient";
+import { getFontSize, getContrastStyle } from "../services/fontSizeHelper";
+import { detectAndNotifyOrderStatusChanges } from "../services/orderNotifications";
 
 // Helper para colores de estado
 const getStatusColor = (status) => {
@@ -21,6 +24,9 @@ export default function PedidosScreen() {
   const theme = useTheme();
   const { colors } = theme;
   
+  // Obtenemos configuraciones del usuario
+  const { fontSize, contrast, addInAppNotification } = useAppContext();
+  
   // Estados de datos
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +43,10 @@ export default function PedidosScreen() {
         if (!refreshing) setLoading(true);
         
         const response = await apiClient.get('/orders');
+        
+        // Detectar cambios de estado y crear notificaciones automáticas
+        detectAndNotifyOrderStatusChanges(orders, response.data, addInAppNotification);
+        
         setOrders(response.data);
     } catch (error) {
         console.error("Error cargando pedidos:", error);
@@ -75,11 +85,13 @@ export default function PedidosScreen() {
         <Card style={[styles.card, { backgroundColor: colors.surface }]}>
             <Card.Title 
                 title={`Pedido #${item.id}`} 
+                titleStyle={{ fontSize: getFontSize("lg", fontSize), ...getContrastStyle(contrast) }}
                 subtitle={date}
+                subtitleStyle={{ fontSize: getFontSize("xs", fontSize) }}
                 right={(props) => (
                     <Chip 
                         style={{backgroundColor: getStatusColor(item.status), marginRight: 16, height: 30}} 
-                        textStyle={{color: 'white', fontSize: 10, fontWeight: 'bold'}}
+                        textStyle={{color: 'white', fontSize: getFontSize("xs", fontSize), fontWeight: 'bold'}}
                     >
                         {item.status.toUpperCase()}
                     </Chip>
@@ -91,11 +103,11 @@ export default function PedidosScreen() {
                 {/* Lista de productos (Máximo 3 para no saturar) */}
                 {item.items?.slice(0, 3).map((detail, index) => (
                     <View key={index} style={styles.itemRow}>
-                        <Text style={{fontWeight:'bold', color: colors.primary}}>{detail.quantity}x</Text>
-                        <Text style={{flex:1, marginLeft: 10}} numberOfLines={1}>
+                        <Text style={{fontWeight:'bold', color: colors.primary, fontSize: getFontSize("sm", fontSize)}}>{detail.quantity}x</Text>
+                        <Text style={{flex:1, marginLeft: 10, fontSize: getFontSize("sm", fontSize), color: colors.text}} numberOfLines={1}>
                             {detail.product?.name || 'Producto eliminado'}
                         </Text>
-                        <Text style={{fontWeight:'bold'}}>${Number(detail.price).toFixed(2)}</Text>
+                        <Text style={{fontWeight:'bold', fontSize: getFontSize("base", fontSize)}}>${Number(detail.price).toFixed(2)}</Text>
                     </View>
                 ))}
                 
@@ -110,11 +122,11 @@ export default function PedidosScreen() {
                 <View style={styles.totalRow}>
                     <View style={{flexDirection:'row', alignItems:'center'}}>
                          <MaterialCommunityIcons name="map-marker" size={14} color={colors.secondary} />
-                         <Text style={{fontSize: 12, color: colors.secondary, marginLeft: 4}}>
+                         <Text style={{fontSize: getFontSize("xs", fontSize), color: colors.secondary, marginLeft: 4}}>
                             {item.address || 'Sin dirección'}
                          </Text>
                     </View>
-                    <Text style={{fontSize: 18, fontWeight:'bold', color: colors.primary}}>
+                    <Text style={{fontSize: getFontSize("3xl", fontSize), fontWeight:'bold', color: colors.primary, ...getContrastStyle(contrast)}}>
                         Total: ${Number(item.total).toFixed(2)}
                     </Text>
                 </View>
@@ -198,7 +210,7 @@ export default function PedidosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  tabsContainer: { paddingVertical: 12, paddingHorizontal: 8 },
+  tabsContainer: { paddingVertical: 50, paddingHorizontal: 8 },
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
   tabText: { fontSize: 14 },
   

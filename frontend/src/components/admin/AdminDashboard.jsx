@@ -90,7 +90,7 @@ export default function AdminDashboard() {
         ) : (
             <View style={styles.statsGrid}>
                 {dashboardCards.map((stat, index) => (
-                    <Card key={index} style={styles.statCard}>
+                    <Card key={index} style={[styles.statCard, { backgroundColor: colors.surface }]}>
                         <Card.Content style={{ alignItems: 'center', paddingVertical: 10 }}>
                             <View style={[styles.iconContainer, { backgroundColor: stat.color + '20' }]}>
                                 <MaterialCommunityIcons 
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 10 }, 
+  container: { flex: 1, padding: 20, paddingTop: 20 }, 
   screenTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, marginTop: 10 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   statCard: { 
@@ -125,7 +125,6 @@ const styles = StyleSheet.create({
       marginBottom: 15, 
       borderRadius: 16, 
       elevation: 3, // Sombra Android
-      backgroundColor: 'white'
   },
   iconContainer: {
       padding: 10,

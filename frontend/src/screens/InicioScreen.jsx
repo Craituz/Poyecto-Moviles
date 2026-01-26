@@ -12,23 +12,26 @@ import {
   Text,
   useTheme,
   IconButton,
-  Snackbar
+  Snackbar,
+  Searchbar
 } from "react-native-paper";
 import { useAppContext } from "../context/AppContext";
 import apiClient from "../services/apiClient";
+import { getFontSize, getContrastStyle } from "../services/fontSizeHelper";
 
 export default function InicioScreen() {
   const theme = useTheme();
   const { colors } = theme;
   
-  // 1. OBTENEMOS 'user' PARA SABER SI ES INVITADO
-  const { addToCart, user } = useAppContext();
+  // 1. OBTENEMOS 'user' PARA SABER SI ES INVITADO + CONFIGURACIONES
+  const { addToCart, user, fontSize, contrast } = useAppContext();
 
   // Estados
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Verificamos si es invitado (ID 0 o Rol guest)
   const isGuest = user?.id === 0 || user?.roles?.[0]?.name === 'guest';
@@ -69,6 +72,11 @@ export default function InicioScreen() {
     setVisible(true);
   };
 
+  // --- 4. FILTRADO DE PRODUCTOS ---
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderItem = ({ item }) => {
     // Fallback de imagen
     const imageSource = item.image 
@@ -84,16 +92,16 @@ export default function InicioScreen() {
         />
 
         <View style={styles.productInfo}>
-          <Text style={[styles.productName, { color: colors.text }]}>
+          <Text style={[styles.productName, { color: colors.text, fontSize: getFontSize("lg", fontSize), ...getContrastStyle(contrast) }]}>
             {item.name}
           </Text>
 
-          <Text style={[styles.productDesc, { color: colors.secondary }]} numberOfLines={2}>
+          <Text style={[styles.description, { color: colors.secondary, fontSize: getFontSize("sm", fontSize) }]}>
             {item.description}
           </Text>
 
           <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: colors.text }]}>
+            <Text style={[styles.price, { color: colors.text, fontSize: getFontSize("xl", fontSize), fontWeight: contrast === "high" ? "bold" : "600" }]}>
               ${Number(item.price).toFixed(2)}
             </Text>
 
@@ -120,6 +128,27 @@ export default function InicioScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       
+      {/* HEADER CON LOGO Y BÚSQUEDA */}
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require("../../assets/logo_yeli_cake.png")} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.brandName, { color: colors.text, fontSize: getFontSize("2xl", fontSize), ...getContrastStyle(contrast) }]}>Yeli's Cake</Text>
+        </View>
+        
+        <Searchbar
+          placeholder="Buscar productos..."
+          onChangeText={setSearchQuery}
+          value={searchQuery}
+          style={styles.searchbar}
+          iconColor={colors.primary}
+          placeholderTextColor={colors.secondary}
+        />
+      </View>
+
       {loading ? (
         <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -129,7 +158,7 @@ export default function InicioScreen() {
         </View>
       ) : (
         <FlatList
-          data={products}
+          data={filteredProducts}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
@@ -146,7 +175,7 @@ export default function InicioScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
                 <Text style={{ color: colors.secondary, textAlign: 'center', marginTop: 50 }}>
-                    No hay productos disponibles por ahora.
+                    {searchQuery ? "No se encontraron productos." : "No hay productos disponibles por ahora."}
                 </Text>
             </View>
           }
@@ -167,7 +196,38 @@ export default function InicioScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { padding: 16, paddingBottom: 80 }, // Espacio extra abajo
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    paddingTop: 40,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginRight: 8,
+  },
+  brandName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  searchbar: {
+    flex: 1,
+    height: 48,
+    borderRadius: 24,
+    elevation: 0,
+  },
+  listContent: { padding: 40, paddingBottom: 80 }, // Espacio extra abajo
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   productCard: {
     borderRadius: 15,

@@ -8,6 +8,7 @@ export default function AdminProducts({ navigation }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const theme = useTheme();
+  const { colors } = theme;
 
   // 1. CARGAR PRODUCTOS DEL BACKEND
   const fetchProducts = async () => {
@@ -63,14 +64,14 @@ export default function AdminProducts({ navigation }) {
         : require("../../../assets/chocoflan.jpg"); 
 
     return (
-      <Card style={styles.productCard}>
+      <Card style={[styles.productCard, { backgroundColor: colors.surface }]}>
         <Card.Content>
           {/* IMAGEN DEL PRODUCTO */}
           <Image source={imageSource} style={styles.cardImage} resizeMode="cover" />
 
-          <Text style={styles.prodName}>{item.name}</Text>
-          <Text style={styles.prodDesc} numberOfLines={2}>{item.description}</Text>
-          <Text style={styles.prodPrice}>
+          <Text style={[styles.prodName, { color: colors.text }]}>{item.name}</Text>
+          <Text style={[styles.prodDesc, { color: colors.secondary }]} numberOfLines={2}>{item.description}</Text>
+          <Text style={[styles.prodPrice, { color: colors.primary }]}>
              ${Number(item.price).toFixed(2)}
           </Text>
         </Card.Content>
@@ -78,8 +79,8 @@ export default function AdminProducts({ navigation }) {
         <Card.Actions style={styles.cardActions}>
           <Button 
             mode="outlined" 
-            textColor="#666" 
-            style={[styles.actionBtn, { borderColor: '#ddd' }]}
+            textColor={colors.secondary} 
+            style={[styles.actionBtn, { borderColor: colors.secondary }]}
             // NAVEGAR A EDITAR (Pasando el producto como parámetro)
             onPress={() => navigation.navigate("EditProduct", { product: item })}
           >
@@ -90,7 +91,7 @@ export default function AdminProducts({ navigation }) {
           
           <Button 
             mode="contained" 
-            buttonColor="#D81B60" 
+            buttonColor={colors.primary} 
             style={styles.actionBtn}
             onPress={() => handleDelete(item.id)}
           >
@@ -102,19 +103,19 @@ export default function AdminProducts({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
        {/* HEADER */}
        <View style={styles.headerRow}>
            <View>
-               <Text style={styles.sectionTitle}>Gestión de</Text>
-               <Text style={styles.sectionTitleBold}>Productos</Text>
+           <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Gestión de</Text>
+           <Text style={[styles.sectionTitleBold, { color: colors.text }]}>Productos</Text>
            </View>
            
            {/* BOTÓN NUEVO */}
            <Button 
                 mode="contained" 
                 icon="plus" 
-                buttonColor="#5D4037" 
+          buttonColor={colors.primary} 
                 onPress={() => navigation.navigate("NewProduct")}
            >
                Nuevo
@@ -124,7 +125,7 @@ export default function AdminProducts({ navigation }) {
        {/* LISTA DE PRODUCTOS */}
        {loading ? (
          <View style={{flex:1, justifyContent:'center'}}>
-             <ActivityIndicator size="large" color="#5D4037" />
+          <ActivityIndicator size="large" color={colors.primary} />
          </View>
        ) : (
          <FlatList
@@ -133,7 +134,7 @@ export default function AdminProducts({ navigation }) {
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 80 }}
             ListEmptyComponent={
-                <Text style={{textAlign:'center', marginTop: 20, color:'#888'}}>
+                <Text style={{textAlign:'center', marginTop: 20, color: colors.secondary}}>
                     No hay productos registrados aún.
                 </Text>
             }
@@ -144,17 +145,17 @@ export default function AdminProducts({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FAFAFA", padding: 20, paddingTop: 50 },
+  container: { flex: 1, padding: 20, paddingTop: 50 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  sectionTitle: { fontSize: 20, color: '#333' },
-  sectionTitleBold: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+  sectionTitle: { fontSize: 20 },
+  sectionTitleBold: { fontSize: 24, fontWeight: 'bold' },
   
-  productCard: { backgroundColor: '#F3E5F5', marginBottom: 15, borderRadius: 15, overflow: 'hidden' },
+  productCard: { marginBottom: 15, borderRadius: 15, overflow: 'hidden' },
   cardImage: { width: '100%', height: 150, borderRadius: 10, marginBottom: 10 },
   
-  prodName: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: '#333' },
-  prodDesc: { fontSize: 13, color: '#666', marginBottom: 10 },
-  prodPrice: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: "#D81B60" },
+  prodName: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  prodDesc: { fontSize: 13, marginBottom: 10 },
+  prodPrice: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
   
   cardActions: { justifyContent: 'space-between', paddingHorizontal: 10, paddingBottom: 15 },
   actionBtn: { flex: 1, marginHorizontal: 5, borderRadius: 20 },

@@ -3,16 +3,18 @@ MD3LightTheme as DefaultLightTheme,
 MD3DarkTheme as DefaultDarkTheme,
 MD3LightTheme as DefaultTheme,
 } from "react-native-paper";
+
 export const PaperTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#D81B60", // Pink
-    secondary: "#795548", // Brown
-    background: "#FFF0F5", // Light Pinkish White
-    surface: "#ffffff",
-    text: "#4E342E", // Dark Brown
-    error: "#f83737ff",
+    primary: "#C2185B", // Rosa elegante (Magenta oscuro)
+    secondary: "#D32F2F", // Rojo suave para acentos
+    background: "#FAFAFA", // Blanco muy suave (casi gris claro)
+    surface: "#FFFFFF", // Blanco puro
+    text: "#212121", // Gris muy oscuro/negro
+    error: "#D32F2F",
+    tertiary: "#7B1FA2", // Púrpura para elementos especiales
   },
 };
 
@@ -20,10 +22,12 @@ export const PaperLightTheme = {
   ...DefaultLightTheme,
   colors: {
     ...DefaultLightTheme.colors,
-    primary: "#D81B60",
-    secondary: "#795548",
-    background: "#FFF0F5",
-    text: "#4E342E",
+    primary: "#C2185B", // Rosa elegante
+    secondary: "#D32F2F", // Rojo suave
+    background: "#FAFAFA", // Blanco suave
+    surface: "#FFFFFF", // Blanco puro
+    text: "#212121", // Texto oscuro
+    tertiary: "#7B1FA2", // Púrpura
   },
 };
 
@@ -31,11 +35,13 @@ export const PaperDarkTheme = {
   ...DefaultDarkTheme,
   colors: {
     ...DefaultDarkTheme.colors,
-    primary: "#F48FB1", // Light Pink for Dark Mode
-    secondary: "#A1887F", // Light Brown
-    background: "#2C1B18", // Very Dark Brown
-    surface: "#3E2723", // Dark Brown Surface
-    text: "#FCE4EC", // Very Light Pink
-    onSurface: "#FCE4EC",
+    primary: "#F06292", // Rosa claro para dark mode
+    secondary: "#EF5350", // Rojo claro
+    background: "#121212", // Gris muy oscuro (no café)
+    surface: "#1E1E1E", // Gris oscuro para cards
+    text: "#FFFFFF", // Blanco puro
+    onSurface: "#FFFFFF", // Blanco para elementos sobre surface
+    tertiary: "#CE93D8", // Púrpura claro
+    error: "#EF5350",
   },
 };

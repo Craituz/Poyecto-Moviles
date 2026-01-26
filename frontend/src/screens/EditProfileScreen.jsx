@@ -4,9 +4,10 @@ import { TextInput, Button, Text, Avatar, useTheme, ActivityIndicator } from 're
 import * as ImagePicker from 'expo-image-picker'; 
 import apiClient from '../services/apiClient';
 import { useAppContext } from '../context/AppContext';
+import { getFontSize, getContrastStyle } from '../services/fontSizeHelper';
 
 export default function EditProfileScreen({ navigation }) {
-  const { user, setAuth } = useAppContext(); 
+  const { user, setAuth, fontSize, contrast } = useAppContext(); 
   const theme = useTheme();
 
   // 1. PROTECCIÓN: Si el usuario no ha cargado, no renderizamos nada para evitar errores
@@ -146,21 +147,22 @@ export default function EditProfileScreen({ navigation }) {
             </View>
         </TouchableOpacity>
 
-        <Text style={{marginTop:15, color: theme.colors.secondary}}>
+        <Text style={{marginTop:15, color: theme.colors.secondary, fontSize: getFontSize("sm", fontSize)}}>
             Toca la imagen para cambiarla
         </Text>
       </View>
 
       {/* --- FORMULARIO --- */}
-      <Text style={[styles.sectionTitle, {color: theme.colors.primary}]}>Información Personal</Text>
+      <Text style={[styles.sectionTitle, {color: theme.colors.primary, fontSize: getFontSize("lg", fontSize), ...getContrastStyle(contrast)}]}>Información Personal</Text>
       
       <TextInput 
         label="Nombre Completo" 
         value={name} 
         onChangeText={setName} 
         mode="outlined" 
-        style={styles.input} 
+        style={[styles.input, { backgroundColor: theme.colors.surface }]}
         left={<TextInput.Icon icon="account" />}
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
       
       <TextInput 
@@ -169,9 +171,10 @@ export default function EditProfileScreen({ navigation }) {
         onChangeText={setPhone} 
         keyboardType="phone-pad" 
         mode="outlined" 
-        style={styles.input} 
+        style={[styles.input, { backgroundColor: theme.colors.surface }]}
         placeholder="Ej: 0991234567"
         left={<TextInput.Icon icon="phone" />}
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
       
       <TextInput 
@@ -179,13 +182,14 @@ export default function EditProfileScreen({ navigation }) {
         value={address} 
         onChangeText={setAddress} 
         mode="outlined" 
-        style={styles.input} 
+        style={[styles.input, { backgroundColor: theme.colors.surface }]} 
         multiline 
         numberOfLines={2}
         left={<TextInput.Icon icon="map-marker" />}
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
       
-      <Text style={[styles.sectionTitle, {color: theme.colors.primary, marginTop: 10}]}>Seguridad</Text>
+      <Text style={[styles.sectionTitle, {color: theme.colors.primary, marginTop: 10, fontSize: getFontSize("lg", fontSize), ...getContrastStyle(contrast)}]}>Seguridad</Text>
       
       <TextInput 
         label="Nueva Contraseña (Opcional)" 
@@ -193,9 +197,10 @@ export default function EditProfileScreen({ navigation }) {
         onChangeText={setPassword} 
         mode="outlined" 
         secureTextEntry 
-        style={styles.input} 
+        style={[styles.input, { backgroundColor: theme.colors.surface }]} 
         left={<TextInput.Icon icon="lock" />}
         placeholder="Dejar vacío para no cambiar"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
 
       <Button 
@@ -224,6 +229,6 @@ const styles = StyleSheet.create({
       elevation: 4 
   }, 
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
-  input: { marginBottom: 15, backgroundColor: 'white' },
+  input: { marginBottom: 15 },
   button: { marginTop: 20 }
 });

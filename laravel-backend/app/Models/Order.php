@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'status', 'total', 'address', 'phone'];
+    protected $fillable = ['user_id', 'status', 'total', 'address', 'phone', 'latitude', 'longitude', 'delivery_type', 'location_updated_at'];
 
     // Un pedido pertenece a un usuario
     public function user()

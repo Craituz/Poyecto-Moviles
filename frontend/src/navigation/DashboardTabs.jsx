@@ -11,6 +11,7 @@ import PerfilScreen from "../screens/PerfilScreen";
 import CarritoScreen from "../screens/CarritoScreen";
 import PedidosScreen from "../screens/PedidosScreen";
 import ConfigScreen from "../screens/ConfigScreen";
+import NotificacionesScreen from "../screens/NotificacionesScreen";
 
 // --- COMPONENTES DE ADMIN ---
 import AdminDashboard from "../components/admin/AdminDashboard";
@@ -22,11 +23,13 @@ const Tab = createBottomTabNavigator();
 
 export default function DashboardTabs() {
   const theme = useTheme();
-  const { user } = useAppContext(); 
+  const { user, inAppNotifications } = useAppContext(); 
   
   const isAdmin = user?.email === 'admin@yeliscake.com' || user?.roles?.[0]?.name === 'admin';
 
   const isGuest = user?.id === 0 || user?.roles?.[0]?.name === 'guest';
+  
+  const unreadCount = inAppNotifications?.filter(n => !n.read).length || 0;
 
   return (
     <Tab.Navigator
@@ -53,13 +56,38 @@ export default function DashboardTabs() {
 
           else if (route.name === "Inicio") iconName = focused ? "cake" : "cake-variant";
           else if (route.name === "Carrito") iconName = focused ? "cart" : "cart-outline";
+          else if (route.name === "Notificaciones") iconName = focused ? "bell" : "bell-outline";
           else if (route.name === "Pedidos") iconName = focused ? "clipboard-text" : "clipboard-text-outline";
           else if (route.name === "Config") iconName = focused ? "cog" : "cog-outline";
           else if (route.name === "Perfil") iconName = focused ? "account" : "account-outline";
           
           else if (route.name === "Salir") iconName = "logout";
 
-          return <MaterialCommunityIcons name={iconName} size={26} color={color} />;
+          return (
+            <View>
+              <MaterialCommunityIcons name={iconName} size={26} color={color} />
+              {route.name === "Notificaciones" && unreadCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -3,
+                    backgroundColor: theme.colors.error,
+                    borderRadius: 10,
+                    minWidth: 18,
+                    height: 18,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 4,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
         },
       })}
     >
@@ -102,6 +130,7 @@ export default function DashboardTabs() {
         <>
           <Tab.Screen name="Inicio" component={InicioScreen} />
           <Tab.Screen name="Carrito" component={CarritoScreen} />
+          <Tab.Screen name="Notificaciones" component={NotificacionesScreen} />
           <Tab.Screen name="Pedidos" component={PedidosScreen} />
           <Tab.Screen name="Perfil" component={PerfilScreen} />
           <Tab.Screen name="Config" component={ConfigScreen} options={{ title: 'Ajustes' }} />

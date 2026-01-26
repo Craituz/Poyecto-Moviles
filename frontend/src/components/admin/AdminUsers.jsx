@@ -181,6 +181,6 @@ export default function AdminUsers({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, marginTop: 10 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, marginTop: 15 },
   card: { marginBottom: 12, borderRadius: 12, elevation: 2 },
 });

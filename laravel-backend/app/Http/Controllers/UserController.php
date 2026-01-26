@@ -141,4 +141,37 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Cuenta eliminada correctamente']);
     }
+
+    // 4. ACTUALIZAR UBICACIÓN DEL USUARIO
+    public function updateLocation(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // SEGURIDAD: Solo puedes actualizar tu propia ubicación
+        $currentUser = auth()->user();
+        if ($currentUser->id != $id) {
+            return response()->json(['message' => 'No tienes permiso para actualizar esta ubicación'], 403);
+        }
+
+        // Validación
+        $request->validate([
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+        ]);
+
+        // Actualizar ubicación
+        $user->latitude = $request->latitude;
+        $user->longitude = $request->longitude;
+        $user->location_updated_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Ubicación actualizada correctamente',
+            'user' => $user
+        ]);
+    }
 }

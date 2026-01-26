@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar, Card, useTheme, Checkbox } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAppContext } from "../context/AppContext";
@@ -71,10 +71,11 @@ export default function LoginScreen({ navigation }) {
           
           {/* LOGO Y TÍTULO */}
           <View style={styles.logoContainer}>
-              <MaterialCommunityIcons name="cake-variant" size={40} color={colors.primary} />
-              <View style={[styles.logoBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.logoBadgeText}>Yeli's Cake</Text>
-              </View>
+              <Image 
+                source={require("../../assets/logo_yeli_cake.png")} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
           </View>
           
           <Text style={[styles.title, { color: colors.primary }]}>Yeli's Cake</Text>
@@ -89,7 +90,7 @@ export default function LoginScreen({ navigation }) {
             autoCapitalize="none"
             underlineColor="transparent"
             activeUnderlineColor={colors.primary}
-            placeholder="ej. admin@yeliscake.com"
+            placeholder="example@gmail.com"
           />
           <View style={styles.underline} />
 
@@ -192,7 +193,11 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
       alignItems: 'center',
-      marginBottom: 10,
+      marginBottom: 20,
+  },
+  logoImage: {
+      width: 150,
+      height: 150,
   },
   logoBadge: {
       paddingHorizontal: 10,

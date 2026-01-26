@@ -25,6 +25,8 @@ class User extends Authenticatable
         'phone',   // Mantenemos tus campos personalizados
         'address', // Mantenemos tus campos personalizados
         'image',
+        'latitude',  // Nueva: Latitud de ubicación
+        'longitude', // Nueva: Longitud de ubicación
     ];
 
     /**
@@ -55,6 +57,14 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+
+    /**
+     * Un usuario tiene múltiples tokens push para notificaciones
+     */
+    public function pushTokens()
+    {
+        return $this->hasMany(PushToken::class);
     }
 
     // --- NUEVA FUNCIÓN AUXILIAR (La que arregla el error) ---

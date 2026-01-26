@@ -193,7 +193,7 @@ export default function RegisterScreen({ navigation }) {
                 onChangeText={handleEmailChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="tu@gmail.com"
+                placeholder="example@gmail.com"
                 maxLength={LIMITS.EMAIL.MAX}
                 style={[styles.input, { backgroundColor: colors.surface }]}
                 underlineColor="transparent"

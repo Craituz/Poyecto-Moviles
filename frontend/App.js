@@ -15,7 +15,7 @@ import DashboardTabs from './src/navigation/DashboardTabs';
 import NewProductScreen from './src/screens/NewProductScreen';
 import EditProductScreen from './src/screens/EditProductScreen';
 import EditUserScreen from './src/screens/EditUserScreen';
-import EditProfileScreen from './src/screens/EditProfileScreen'; // <--- 1. NUEVA IMPORTACIÓN
+import EditProfileScreen from './src/screens/EditProfileScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 
@@ -26,7 +26,7 @@ function MainLayout() {
   
   const theme = isDarkTheme ? PaperDarkTheme : PaperLightTheme;
 
-  // Pantalla de carga mientras se verifica el token
+  // Pantalla de carga mientras se verifica la sesión
   if (loadingAuth) {
     return (
       <PaperProvider theme={theme}>
@@ -40,7 +40,14 @@ function MainLayout() {
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer theme={theme}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            headerStyle: { backgroundColor: theme.colors.surface },
+            headerTintColor: theme.colors.text,
+            headerTitleStyle: { color: theme.colors.text, fontWeight: 'bold' },
+          }}
+        >
           
           {user ? (
             // --- USUARIO LOGUEADO (Cliente o Admin) ---
@@ -77,7 +84,7 @@ function MainLayout() {
                 }} 
               />
 
-              {/* <--- 2. RUTA PARA EDITAR MI PERFIL (Cliente/Admin) 👇 */}
+              {/* Ruta para Editar Mi Perfil */}
               <Stack.Screen 
                 name="EditProfile" 
                 component={EditProfileScreen} 

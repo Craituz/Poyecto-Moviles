@@ -84,11 +84,11 @@ export default function AdminOrders() {
     });
 
     return (
-        <Card style={styles.orderCard}>
+        <Card style={[styles.orderCard, { backgroundColor: colors.surface }]}>
             <Card.Content>
                 {/* CABECERA: ID Y ESTADO */}
                 <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>Pedido #{item.id}</Text>
+                    <Text style={[styles.orderId, { color: colors.text }]}>Pedido #{item.id}</Text>
                     <Chip 
                         style={{ backgroundColor: getStatusColor(item.status), height: 28 }} 
                         textStyle={{ color: 'white', fontSize: 10, lineHeight: 12 }}
@@ -154,8 +154,8 @@ export default function AdminOrders() {
   };
 
   return (
-    <View style={styles.container}>
-        <Text style={styles.screenTitle}>Gestión de Pedidos</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.screenTitle, { color: colors.text }]}>Gestión de Pedidos</Text>
         
         {/* FILTROS HORIZONTALES */}
         <View style={{ height: 50 }}>
@@ -167,9 +167,9 @@ export default function AdminOrders() {
                         onPress={() => setActiveFilter(status)}
                         style={[
                             styles.filterChip, 
-                            activeFilter === status ? { backgroundColor: colors.primary } : { backgroundColor: '#E0E0E0' }
+                            activeFilter === status ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }
                         ]}
-                        textStyle={{ color: activeFilter === status ? 'white' : '#333' }}
+                        textStyle={{ color: activeFilter === status ? '#FFFFFF' : colors.text }}
                     >
                         {status}
                     </Chip>
@@ -209,10 +209,10 @@ const OrderInfoRow = ({ icon, text }) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FAFAFA", padding: 16, paddingTop: 10 },
+    container: { flex: 1, padding: 16, paddingTop: 20 },
   screenTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 15, color: '#333', marginTop: 10 },
   filterChip: { marginRight: 8 },
-  orderCard: { backgroundColor: 'white', marginBottom: 15, marginTop: 5, borderRadius: 12, elevation: 2 },
+    orderCard: { marginBottom: 15, marginTop: 5, borderRadius: 12, elevation: 2 },
   orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   orderId: { fontWeight: 'bold', fontSize: 16 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15, alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: '#eee' },

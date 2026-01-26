@@ -3,10 +3,13 @@ import { View, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../services/apiClient';
+import { useAppContext } from '../context/AppContext';
+import { getFontSize, getContrastStyle } from '../services/fontSizeHelper';
 
 export default function EditProductScreen({ route, navigation }) {
   const theme = useTheme();
   const { colors } = theme;
+  const { fontSize, contrast } = useAppContext();
   
   // Recibimos el producto a editar por parámetros
   const { product } = route.params;
@@ -76,7 +79,7 @@ export default function EditProductScreen({ route, navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text variant="headlineMedium" style={{color: colors.primary, marginBottom:20}}>
+      <Text variant="headlineMedium" style={{color: colors.primary, marginBottom:20, fontSize: getFontSize("2xl", fontSize), ...getContrastStyle(contrast)}}>
         Editar Producto
       </Text>
 
@@ -89,9 +92,9 @@ export default function EditProductScreen({ route, navigation }) {
           </Button>
       </View>
 
-      <TextInput label="Nombre" value={name} onChangeText={setName} style={styles.input} mode="outlined" />
-      <TextInput label="Precio" value={price} onChangeText={setPrice} keyboardType="numeric" style={styles.input} mode="outlined" />
-      <TextInput label="Descripción" value={description} onChangeText={setDescription} multiline numberOfLines={4} style={styles.input} mode="outlined" />
+      <TextInput label="Nombre" value={name} onChangeText={setName} style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
+      <TextInput label="Precio" value={price} onChangeText={setPrice} keyboardType="numeric" style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
+      <TextInput label="Descripción" value={description} onChangeText={setDescription} multiline numberOfLines={4} style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
 
       <Button mode="contained" onPress={updateProduct} loading={loading} style={{marginTop:10}}>
         Guardar Cambios

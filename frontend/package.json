@@ -18,6 +18,8 @@
     "axios": "^1.13.2",
     "expo": "~54.0.25",
     "expo-image-picker": "~17.0.10",
+    "expo-location": "~19.0.8",
+    "expo-notifications": "^0.32.16",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -29,5 +31,9 @@
     "react-native-web": "^0.21.0",
     "undefined": "@expo/vector/icon"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "eas-cli": "^16.28.0"
+  }
 }

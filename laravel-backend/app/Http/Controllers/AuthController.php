@@ -108,4 +108,57 @@ class AuthController extends Controller
             'message' => 'Sesión cerrada correctamente'
         ], 200);
     }
+
+    // --- CAMBIAR CONTRASEÑA ---
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = auth()->user();
+
+        // Verificar que la contraseña actual es correcta
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña actual es incorrecta'
+            ], 403);
+        }
+
+        // Actualizar contraseña
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña cambiada correctamente'
+        ], 200);
+    }
+
+    // --- CAMBIAR EMAIL ---
+    public function changeEmail(Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email|unique:users,email',
+            'password' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        // Verificar que la contraseña es correcta
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña es incorrecta'
+            ], 403);
+        }
+
+        // Actualizar email
+        $user->email = $request->new_email;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Correo electrónico cambiado correctamente',
+            'user' => $user
+        ], 200);
+    }
 }

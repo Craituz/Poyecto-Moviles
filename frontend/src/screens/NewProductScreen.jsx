@@ -3,10 +3,13 @@ import { View, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, useTheme, HelperText } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // <--- Importamos esto
 import apiClient from '../services/apiClient'; // Asegúrate de que la ruta sea correcta
+import { useAppContext } from '../context/AppContext';
+import { getFontSize, getContrastStyle } from '../services/fontSizeHelper';
 
 export default function NewProductScreen({ navigation }) {
   const theme = useTheme();
   const { colors } = theme;
+  const { fontSize, contrast } = useAppContext();
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -98,7 +101,7 @@ export default function NewProductScreen({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text variant="headlineMedium" style={{color: colors.primary, fontWeight: 'bold'}}>
+      <Text variant="headlineMedium" style={{color: colors.primary, fontWeight: 'bold', fontSize: getFontSize("2xl", fontSize), ...getContrastStyle(contrast)}}>
         Nuevo Producto
       </Text>
 
@@ -108,7 +111,7 @@ export default function NewProductScreen({ navigation }) {
               <Image source={{ uri: image }} style={styles.previewImage} />
           ) : (
               <View style={[styles.placeholder, { backgroundColor: colors.surfaceVariant }]}>
-                  <Text style={{color: colors.secondary}}>Sin imagen</Text>
+                  <Text style={{color: colors.secondary, fontSize: getFontSize("sm", fontSize)}}>Sin imagen</Text>
               </View>
           )}
           <Button mode="outlined" onPress={pickImage} icon="camera">
@@ -122,6 +125,7 @@ export default function NewProductScreen({ navigation }) {
         onChangeText={setName}
         style={styles.input}
         mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
 
       <TextInput
@@ -131,6 +135,7 @@ export default function NewProductScreen({ navigation }) {
         keyboardType="numeric"
         style={styles.input}
         mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
 
       <TextInput
@@ -141,6 +146,7 @@ export default function NewProductScreen({ navigation }) {
         numberOfLines={4}
         style={styles.input}
         mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
 
       <Button 

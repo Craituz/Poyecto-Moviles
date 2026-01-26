@@ -12,6 +12,43 @@ export const AppProvider = ({ children }) => {
   
   const [cart, setCart] = useState([]);             
   const [isDarkTheme, setIsDarkTheme] = useState(false); 
+  const [location, setLocation] = useState(null);
+  const [fontSize, setFontSize] = useState("medium"); // small, medium, large
+  const [contrast, setContrast] = useState("normal"); // normal, high
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  
+  const [inAppNotifications, setInAppNotifications] = useState([]);
+
+  // Función para cargar notificaciones del backend
+  const fetchNotifications = async (token = null) => {
+    try {
+      // Si se proporciona un token, configurarlo temporalmente
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await apiClient.get('/notifications', { headers });
+      
+      if (response.data && response.data.notifications) {
+        const backendNotifications = response.data.notifications.map(notif => ({
+          id: notif.id,
+          type: notif.type,
+          title: notif.title,
+          body: notif.body,
+          timestamp: notif.created_at,
+          read: !!notif.read_at,
+        }));
+        
+        setInAppNotifications(backendNotifications);
+        await AsyncStorage.setItem('inAppNotifications', JSON.stringify(backendNotifications));
+      }
+    } catch (error) {
+      // No mostrar error si es problema de conexión, solo log
+      if (error.response) {
+        console.error('Error cargando notificaciones:', error.response.status);
+      } else {
+        console.log('No se pudieron cargar notificaciones del servidor');
+      }
+    }
+  };
 
   useEffect(() => {
     const loadStorageData = async () => {
@@ -26,11 +63,45 @@ export const AppProvider = ({ children }) => {
           setUser(JSON.parse(userInfo));
           
           apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // Cargar notificaciones del servidor al restaurar sesión
+          await fetchNotifications(token);
         }
 
         const themePref = await AsyncStorage.getItem('theme');
         if (themePref === 'dark') {
           setIsDarkTheme(true);
+        }
+
+        const savedLocation = await AsyncStorage.getItem('userLocation');
+        if (savedLocation) {
+          setLocation(JSON.parse(savedLocation));
+        }
+
+        const savedFontSize = await AsyncStorage.getItem('fontSize');
+        if (savedFontSize) {
+          setFontSize(savedFontSize);
+        }
+
+        const savedContrast = await AsyncStorage.getItem('contrast');
+        if (savedContrast) {
+          setContrast(savedContrast);
+        }
+
+        const savedNotificationsEnabled = await AsyncStorage.getItem('notificationsEnabled');
+        if (savedNotificationsEnabled !== null) {
+          setNotificationsEnabled(JSON.parse(savedNotificationsEnabled));
+        }
+
+        
+
+                const savedInAppNotifications = await AsyncStorage.getItem('inAppNotifications');
+        const savedCart = await AsyncStorage.getItem('cart');
+        if (savedCart) {
+          setCart(JSON.parse(savedCart));
+        }
+        if (savedInAppNotifications) {
+          setInAppNotifications(JSON.parse(savedInAppNotifications));
         }
 
       } catch (e) {
@@ -53,6 +124,9 @@ export const AppProvider = ({ children }) => {
         await AsyncStorage.setItem('token', tokenData);
         await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
     }
+
+    // Cargar notificaciones del backend
+    await fetchNotifications(tokenData);
   };
 
   const logout = async () => {
@@ -63,6 +137,10 @@ export const AppProvider = ({ children }) => {
 
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('userInfo');
+    
+    // Limpiar notificaciones al cerrar sesión
+    setInAppNotifications([]);
+    await AsyncStorage.removeItem('inAppNotifications');
   };
 
   const setAuth = async (userData, tokenData = null) => {
@@ -84,22 +162,128 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const addToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product]);
+  const addToCart = async (product) => {
+    const updatedCart = [...cart, product];
+    setCart(updatedCart);
+    await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
-  const removeFromCart = (indexToRemove) => {
-    setCart((prevCart) => prevCart.filter((_, index) => index !== indexToRemove));
+  const removeFromCart = async (indexToRemove) => {
+    const updatedCart = cart.filter((_, index) => index !== indexToRemove);
+    setCart(updatedCart);
+    await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
+    await AsyncStorage.removeItem('cart');
+  };
+
+  const saveLocation = async (coords) => {
+    try {
+      setLocation(coords);
+      await AsyncStorage.setItem('userLocation', JSON.stringify(coords));
+      
+      // Enviar a la API del backend
+      if (userToken && user?.id) {
+        try {
+          await apiClient.post(`/users/${user.id}/location`, {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
+          console.log('Ubicación guardada en el servidor');
+        } catch (apiError) {
+          console.error('Error guardando ubicación en servidor:', apiError);
+        }
+      }
+    } catch (error) {
+      console.error('Error guardando ubicación:', error);
+    }
   };
 
   const toggleTheme = async () => {
     const newThemeStatus = !isDarkTheme;
     setIsDarkTheme(newThemeStatus);
     await AsyncStorage.setItem('theme', newThemeStatus ? 'dark' : 'light');
+  };
+
+  const updateFontSize = async (newSize) => {
+    setFontSize(newSize);
+    await AsyncStorage.setItem('fontSize', newSize);
+  };
+
+  const updateContrast = async (newContrast) => {
+    setContrast(newContrast);
+    await AsyncStorage.setItem('contrast', newContrast);
+  };
+
+  const toggleNotificationsEnabled = async () => {
+    const newStatus = !notificationsEnabled;
+    setNotificationsEnabled(newStatus);
+    await AsyncStorage.setItem('notificationsEnabled', JSON.stringify(newStatus));
+  };
+
+  
+
+  const addInAppNotification = async (notification) => {
+    const newNotification = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      read: false,
+      ...notification,
+    };
+    
+    setInAppNotifications((prev) => {
+      const updated = [newNotification, ...prev];
+      AsyncStorage.setItem('inAppNotifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearAllNotifications = async () => {
+    setInAppNotifications([]);
+    await AsyncStorage.removeItem('inAppNotifications');
+    
+    // También limpiar en el backend
+    try {
+      await apiClient.delete('/notifications');
+    } catch (error) {
+      console.error('Error eliminando notificaciones del servidor:', error);
+    }
+  };
+
+  const markNotificationAsRead = async (id) => {
+    // Actualizar en el backend
+    try {
+      await apiClient.put(`/notifications/${id}/read`);
+    } catch (error) {
+      console.error('Error marcando notificación como leída:', error);
+    }
+
+    // Actualizar localmente
+    setInAppNotifications((prev) => {
+      const updated = prev.map((notif) =>
+        notif.id === id ? { ...notif, read: true } : notif
+      );
+      AsyncStorage.setItem('inAppNotifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const deleteNotification = async (id) => {
+    // Eliminar en el backend
+    try {
+      await apiClient.delete(`/notifications/${id}`);
+    } catch (error) {
+      console.error('Error eliminando notificación:', error);
+    }
+
+    // Eliminar localmente
+    setInAppNotifications((prev) => {
+      const updated = prev.filter((notif) => notif.id !== id);
+      AsyncStorage.setItem('inAppNotifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
@@ -117,6 +301,23 @@ export const AppProvider = ({ children }) => {
       addToCart,
       removeFromCart,
       clearCart,
+      location,
+      saveLocation,
+      
+      fontSize,
+      updateFontSize,
+      contrast,
+      updateContrast,
+      notificationsEnabled,
+      toggleNotificationsEnabled,
+      
+      
+      inAppNotifications,
+      addInAppNotification,
+      markNotificationAsRead,
+      deleteNotification,
+      clearAllNotifications,
+      fetchNotifications,
       
       isDarkTheme,
       toggleTheme
