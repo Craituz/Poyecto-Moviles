@@ -24,8 +24,7 @@ export default function EditProductScreen({ route, navigation }) {
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
       quality: 0.8,
     });
 
@@ -92,9 +91,39 @@ export default function EditProductScreen({ route, navigation }) {
           </Button>
       </View>
 
-      <TextInput label="Nombre" value={name} onChangeText={setName} style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
-      <TextInput label="Precio" value={price} onChangeText={setPrice} keyboardType="numeric" style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
-      <TextInput label="Descripción" value={description} onChangeText={setDescription} multiline numberOfLines={4} style={styles.input} mode="outlined" labelStyle={{ fontSize: getFontSize("sm", fontSize) }} />
+      <TextInput
+        label="Nombre"
+        value={name}
+        onChangeText={setName}
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
+        mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
+      />
+      <TextInput
+        label="Precio"
+        value={price}
+        onChangeText={setPrice}
+        keyboardType="numeric"
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
+        mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
+      />
+      <TextInput
+        label="Descripción"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        numberOfLines={4}
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
+        mode="outlined"
+        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
+      />
 
       <Button mode="contained" onPress={updateProduct} loading={loading} style={{marginTop:10}}>
         Guardar Cambios

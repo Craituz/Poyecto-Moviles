@@ -15,12 +15,16 @@ export default function NotificacionesScreen() {
     clearAllNotifications,
     fetchNotifications,
     fontSize,
-    contrast 
+    contrast,
+    user,
+    userToken
   } = useAppContext();
 
-  // Recargar notificaciones al abrir la pantalla
+  // Recargar notificaciones al abrir la pantalla (solo si está autenticado)
   useEffect(() => {
-    fetchNotifications();
+    if (userToken) {
+      fetchNotifications();
+    }
   }, []);
 
   const unreadCount = inAppNotifications.filter(n => !n.read).length;

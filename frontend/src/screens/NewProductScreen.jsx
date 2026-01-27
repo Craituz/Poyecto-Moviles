@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Alert, Linking } from 'react-native';
 import { TextInput, Button, Text, useTheme, HelperText } from 'react-native-paper';
-import * as ImagePicker from 'expo-image-picker'; // <--- Importamos esto
+import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../services/apiClient'; // Asegúrate de que la ruta sea correcta
 import { useAppContext } from '../context/AppContext';
 import { getFontSize, getContrastStyle } from '../services/fontSizeHelper';
@@ -17,26 +17,83 @@ export default function NewProductScreen({ navigation }) {
   const [image, setImage] = useState(null); // Aquí guardamos la URI de la imagen
   const [loading, setLoading] = useState(false);
 
-  // 1. FUNCIÓN PARA ABRIR GALERÍA
-  const pickImage = async () => {
-    // Pedir permisos
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
-      alert("Se requieren permisos para acceder a la galería.");
-      return;
+  // Solicita permisos solo cuando son necesarios y evita re-preguntar si ya están otorgados o bloqueados
+  const requestPermissionIfNeeded = async (getPermissionAsync, requestPermissionAsync, messages) => {
+    const current = await getPermissionAsync();
+    if (current.status === 'granted') return { granted: true };
+
+    // Si el usuario bloqueó los permisos, lo llevamos a la configuración
+    if (current.status === 'denied' && current.canAskAgain === false) {
+      Alert.alert(messages.blockedTitle, messages.blockedMessage, [
+        { text: 'Abrir configuración', onPress: Linking.openSettings },
+        { text: 'Cancelar', style: 'cancel' },
+      ]);
+      return { granted: false, blocked: true };
     }
+
+    const requested = await requestPermissionAsync();
+    if (requested.status !== 'granted') {
+      Alert.alert(messages.deniedTitle, messages.deniedMessage);
+      return { granted: false };
+    }
+    return { granted: true };
+  };
+
+  const pickFromLibrary = async () => {
+    const permission = await requestPermissionIfNeeded(
+      ImagePicker.getMediaLibraryPermissionsAsync,
+      ImagePicker.requestMediaLibraryPermissionsAsync,
+      {
+        blockedTitle: 'Permiso de galería bloqueado',
+        blockedMessage: 'Activa el permiso de galería desde la configuración del dispositivo para seleccionar imágenes.',
+        deniedTitle: 'Permiso requerido',
+        deniedMessage: 'Necesitamos acceso a tu galería para seleccionar imágenes.',
+      },
+    );
+
+    if (!permission.granted) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8, // Calidad un poco reducida para subir más rápido
+      allowsEditing: false,
+      quality: 0.8,
     });
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }
+  };
+
+  const takePhoto = async () => {
+    const permission = await requestPermissionIfNeeded(
+      ImagePicker.getCameraPermissionsAsync,
+      ImagePicker.requestCameraPermissionsAsync,
+      {
+        blockedTitle: 'Permiso de cámara bloqueado',
+        blockedMessage: 'Activa el permiso de cámara desde la configuración del dispositivo para tomar fotos.',
+        deniedTitle: 'Permiso requerido',
+        deniedMessage: 'Necesitamos acceso a tu cámara para tomar fotos.',
+      },
+    );
+
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false, // No forzar recorte
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSelectImage = () => {
+    Alert.alert('Selecciona una opción', 'Elige cómo deseas agregar la imagen', [
+      { text: 'Tomar foto', onPress: takePhoto },
+      { text: 'Elegir de galería', onPress: pickFromLibrary },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   };
 
   // 2. FUNCIÓN PARA GUARDAR (POST)
@@ -114,7 +171,7 @@ export default function NewProductScreen({ navigation }) {
                   <Text style={{color: colors.secondary, fontSize: getFontSize("sm", fontSize)}}>Sin imagen</Text>
               </View>
           )}
-          <Button mode="outlined" onPress={pickImage} icon="camera">
+            <Button mode="outlined" onPress={handleSelectImage} icon="camera">
               Seleccionar Imagen
           </Button>
       </View>
@@ -123,7 +180,9 @@ export default function NewProductScreen({ navigation }) {
         label="Nombre del producto"
         value={name}
         onChangeText={setName}
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
         mode="outlined"
         labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
@@ -133,7 +192,9 @@ export default function NewProductScreen({ navigation }) {
         value={price}
         onChangeText={setPrice}
         keyboardType="numeric"
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
         mode="outlined"
         labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
@@ -144,7 +205,9 @@ export default function NewProductScreen({ navigation }) {
         onChangeText={setDescription}
         multiline
         numberOfLines={4}
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface }]}
+        textColor={colors.onSurface}
+        placeholderTextColor={colors.onSurfaceVariant}
         mode="outlined"
         labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />

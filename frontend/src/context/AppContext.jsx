@@ -22,9 +22,14 @@ export const AppProvider = ({ children }) => {
   // Función para cargar notificaciones del backend
   const fetchNotifications = async (token = null) => {
     try {
-      // Si se proporciona un token, configurarlo temporalmente
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+      // Solo intentar cargar si hay token (usuario autenticado)
+      const tokenToUse = token || userToken;
+      if (!tokenToUse) {
+        console.log('No hay sesión activa, notificaciones no disponibles');
+        return;
+      }
+
+      const headers = { Authorization: `Bearer ${tokenToUse}` };
       const response = await apiClient.get('/notifications', { headers });
       
       if (response.data && response.data.notifications) {
@@ -41,7 +46,11 @@ export const AppProvider = ({ children }) => {
         await AsyncStorage.setItem('inAppNotifications', JSON.stringify(backendNotifications));
       }
     } catch (error) {
-      // No mostrar error si es problema de conexión, solo log
+      // Silenciar 401 (no autenticado) para modo invitado
+      if (error.response && error.response.status === 401) {
+        return; // Usuario no autenticado, esto es normal
+      }
+      // Otros errores sí reportar
       if (error.response) {
         console.error('Error cargando notificaciones:', error.response.status);
       } else {
