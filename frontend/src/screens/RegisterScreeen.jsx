@@ -28,7 +28,7 @@ export default function RegisterScreen({ navigation }) {
   const theme = useTheme();
   const { colors } = theme;
 
-  // Estados del formulario
+  // Estados del formulario.
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
