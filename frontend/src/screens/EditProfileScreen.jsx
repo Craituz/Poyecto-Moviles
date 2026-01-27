@@ -23,8 +23,7 @@ export default function EditProfileScreen({ navigation }) {
   const [name, setName] = useState(user.name || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [address, setAddress] = useState(user.address || '');
-  const [password, setPassword] = useState(''); 
-  
+  // Seguridad se gestiona en Ajustes; no pedimos contraseña aquí
   const [image, setImage] = useState(user.image); 
   const [isNewImage, setIsNewImage] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,15 +79,6 @@ export default function EditProfileScreen({ navigation }) {
         formData.append('phone', phone || '');
         formData.append('address', address || '');
         
-        if (password.length > 0) {
-            if (password.length < 8) {
-                Alert.alert("Error", "La contraseña debe tener al menos 8 caracteres.");
-                setLoading(false);
-                return;
-            }
-            formData.append('password', password);
-        }
-
         if (isNewImage) {
             const localUri = image;
             const filename = localUri.split('/').pop();
@@ -189,20 +179,6 @@ export default function EditProfileScreen({ navigation }) {
         labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
       />
       
-      <Text style={[styles.sectionTitle, {color: theme.colors.primary, marginTop: 10, fontSize: getFontSize("lg", fontSize), ...getContrastStyle(contrast)}]}>Seguridad</Text>
-      
-      <TextInput 
-        label="Nueva Contraseña (Opcional)" 
-        value={password} 
-        onChangeText={setPassword} 
-        mode="outlined" 
-        secureTextEntry 
-        style={[styles.input, { backgroundColor: theme.colors.surface }]} 
-        left={<TextInput.Icon icon="lock" />}
-        placeholder="Dejar vacío para no cambiar"
-        labelStyle={{ fontSize: getFontSize("sm", fontSize) }}
-      />
-
       <Button 
         mode="contained" 
         onPress={handleUpdate} 

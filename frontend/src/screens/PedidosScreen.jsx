@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList, RefreshControl, Linking, Alert } from "react-native";
 import { Text, useTheme, ActivityIndicator, Card, Divider, Chip } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -120,11 +120,27 @@ export default function PedidosScreen() {
                 <Divider style={{marginTop: 10, marginBottom: 10}} />
                 
                 <View style={styles.totalRow}>
-                    <View style={{flexDirection:'row', alignItems:'center'}}>
-                         <MaterialCommunityIcons name="map-marker" size={14} color={colors.secondary} />
-                         <Text style={{fontSize: getFontSize("xs", fontSize), color: colors.secondary, marginLeft: 4}}>
-                            {item.address || 'Sin dirección'}
-                         </Text>
+                    <View style={{flex:1}}>
+                         <View style={{flexDirection:'row', alignItems:'center', marginBottom: 6}}>
+                             <MaterialCommunityIcons name="map-marker" size={14} color={colors.secondary} />
+                             <Text style={{fontSize: getFontSize("xs", fontSize), color: colors.secondary, marginLeft: 4}}>
+                                {item.address || 'Sin dirección'}
+                             </Text>
+                         </View>
+                         {item.latitude && item.longitude && (
+                           <TouchableOpacity
+                             onPress={() => {
+                               const url = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
+                               Linking.openURL(url).catch(() => Alert.alert('Error', 'No se pudo abrir el mapa.'));
+                             }}
+                             style={{flexDirection:'row', alignItems:'center'}}
+                           >
+                             <MaterialCommunityIcons name="map-search" size={16} color={colors.primary} />
+                             <Text style={{marginLeft: 6, color: colors.primary, fontWeight:'bold', fontSize: getFontSize("xs", fontSize)}}>
+                               Ver ubicación
+                             </Text>
+                           </TouchableOpacity>
+                         )}
                     </View>
                     <Text style={{fontSize: getFontSize("3xl", fontSize), fontWeight:'bold', color: colors.primary, ...getContrastStyle(contrast)}}>
                         Total: ${Number(item.total).toFixed(2)}

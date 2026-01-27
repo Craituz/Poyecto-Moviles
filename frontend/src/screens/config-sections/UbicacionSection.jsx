@@ -94,7 +94,7 @@ export default function UbicacionSection({ colors }) {
     <ScrollView style={{ marginBottom: 20 }}>
       <Card style={[styles.section, { backgroundColor: colors.surface }]}>
         <Card.Title
-          title="Permisos y Ubicación"
+          title="Permisos de Ubicación y Cámara"
           titleStyle={{ color: colors.text, fontSize: 20 }}
         />
         <Card.Content>

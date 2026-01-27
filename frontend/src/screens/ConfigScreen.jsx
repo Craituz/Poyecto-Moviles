@@ -16,7 +16,7 @@ export default function ConfigScreen() {
 
   const menuItems = [
     { id: 'tema', label: '🌙 Tema', icon: 'palette' },
-    { id: 'ubicacion', label: '📍 Ubicación', icon: 'map-marker' },
+    { id: 'ubicacion', label: '📍 Permisos', icon: 'map-marker' },
     { id: 'notificaciones', label: '🔔 Notificaciones', icon: 'bell' },
     { id: 'seguridad', label: '🔒 Seguridad', icon: 'lock' },
   ];

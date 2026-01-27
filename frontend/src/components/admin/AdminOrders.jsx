@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, ScrollView, StyleSheet, FlatList, RefreshControl, Alert } from "react-native";
+import { View, ScrollView, StyleSheet, FlatList, RefreshControl, Alert, TouchableOpacity, Linking } from "react-native";
 import { Text, Card, Chip, Divider, Menu, Button, useTheme, ActivityIndicator } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -101,7 +101,21 @@ export default function AdminOrders() {
                 <OrderInfoRow icon="account" text={item.user?.name || "Cliente Desconocido"} />
                 <OrderInfoRow icon="email" text={item.user?.email} />
                 <OrderInfoRow icon="phone" text={item.phone || "Sin teléfono"} />
-                <OrderInfoRow icon="map-marker" text={item.address || "Sin dirección"} />
+                                <OrderInfoRow icon="map-marker" text={item.address || "Sin dirección"} />
+                                {item.latitude && item.longitude && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            const url = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
+                                            Linking.openURL(url).catch(() => Alert.alert('Error', 'No se pudo abrir el mapa.'));
+                                        }}
+                                        style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
+                                    >
+                                        <MaterialCommunityIcons name="map-search" size={16} color={colors.primary} />
+                                        <Text style={{ marginLeft: 6, color: colors.primary, fontWeight: 'bold', fontSize: 12 }}>
+                                            Ver ubicación
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
                 <OrderInfoRow icon="calendar" text={date} />
                 
                 <Divider style={{ marginVertical: 10 }} />

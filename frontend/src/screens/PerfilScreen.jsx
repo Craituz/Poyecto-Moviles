@@ -12,6 +12,7 @@ export default function PerfilScreen({ navigation }) {
   const theme = useTheme();
   const { colors } = theme;
   const isGuest = !user || user?.id === 0 || user?.roles?.[0]?.name === 'guest';
+  const isAdmin = user?.roles?.some((role) => role.name === 'admin');
   
   // Estados para el historial.
   const [orders, setOrders] = useState([]);
@@ -47,8 +48,9 @@ export default function PerfilScreen({ navigation }) {
 
   // Obtener historial de pedidos (solo entregados y cancelados)
   const fetchOrderHistory = async () => {
-    if (isGuest) {
+    if (isGuest || isAdmin) {
       setLoadingOrders(false);
+      setOrders([]);
       return;
     }
     
@@ -74,7 +76,7 @@ export default function PerfilScreen({ navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       fetchOrderHistory();
-    }, [isGuest])
+    }, [isGuest, isAdmin])
   );
 
   // Helper para colores de estado
@@ -223,7 +225,8 @@ export default function PerfilScreen({ navigation }) {
 
       </View>
 
-      <View style={[styles.card, { marginTop: 16, marginBottom: 30, backgroundColor: colors.surface }]}>
+       {!isAdmin && (
+       <View style={[styles.card, { marginTop: 16, marginBottom: 30, backgroundColor: colors.surface }]}>
         <View style={styles.historyHeader}>
              <MaterialCommunityIcons name="history" size={24} color={colors.text} />
              <Text style={[styles.historyTitle, { color: colors.text, fontSize: getFontSize("lg", fontSize) }]}>Historial de Compras</Text>
@@ -293,6 +296,7 @@ export default function PerfilScreen({ navigation }) {
           </View>
         )}
       </View>
+      )}
     </ScrollView>
   );
 }
