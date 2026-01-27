@@ -13,7 +13,7 @@ export default function PerfilScreen({ navigation }) {
   const { colors } = theme;
   const isGuest = !user || user?.id === 0 || user?.roles?.[0]?.name === 'guest';
   
-  // Estados para el historial
+  // Estados para el historial.
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 

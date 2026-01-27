@@ -24,7 +24,7 @@ export default function ConfigScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       {activeSection === null ? (
-        // --- MENÚ PRINCIPAL ---
+        // --- MENÚ PRINCIPAL  ---
         <>
           <Text style={[styles.mainTitle, { color: colors.text }]}>Configuración</Text>
 
